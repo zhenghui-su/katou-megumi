@@ -1,0 +1,79 @@
+{
+  "nav": {
+    "home": "Home",
+    "gallery": "Gallery",
+    "about": "About",
+    "works": "Works",
+    "videos": "Videos",
+    "community": "Admin"
+  },
+  "home": {
+    "title": "Katou Megumi",
+    "subtitle": "かとう めぐみ",
+    "description": "An ordinary yet special heroine with the gentle power to heal hearts",
+    "viewCollection": "Watch Anime",
+    "downloadWallpaper": "Download Wallpaper",
+    "share": "Share",
+    "welcome": "Welcome to Katou Megumi's World",
+    "subtitle2": "The cutest heroine from Saenai Heroine no Sodatekata",
+    "startExplore": "Start Exploring",
+    "features": "Features",
+    "characterIntro": {
+      "title": "Character Introduction",
+      "description": "Learn about Katou Megumi's basic information, personality traits, and important role in the series",
+      "action": "View Details"
+    },
+    "gallery": {
+      "title": "Beautiful Gallery",
+      "description": "Collection of beautiful images, illustrations, and screenshots of Katou Megumi",
+      "action": "Browse Gallery"
+    },
+    "quotes": {
+      "title": "Classic Quotes",
+      "description": "Collection of classic lines and quotes from Katou Megumi in the series",
+      "action": "Coming Soon"
+    }
+  },
+  "gallery": {
+    "title": "Katou Megumi Gallery",
+    "subtitle": "Collection of beautiful images of Katou Megumi",
+    "moreImages": "More beautiful images are being organized, please stay tuned..."
+  },
+  "about": {
+    "title": "About Katou Megumi",
+    "subtitle": "Heroine from Saenai Heroine no Sodatekata",
+    "basicInfo": {
+      "title": "Basic Information",
+      "name": "Name",
+      "nameValue": "Katou Megumi (かとう めぐみ)",
+      "work": "Series",
+      "workValue": "Saenai Heroine no Sodatekata",
+      "voice": "Voice Actor",
+      "voiceValue": "Yasuno Kiyono",
+      "grade": "Grade",
+      "gradeValue": "High School 2nd Year"
+    },
+    "personality": {
+      "title": "Personality Traits"
+    },
+    "introduction": {
+      "title": "Character Introduction",
+      "paragraph1": "Katou Megumi is the heroine of \"Saenai Heroine no Sodatekata\", a seemingly ordinary yet charming girl. She possesses a unique \"background character\" attribute, able to perfectly hide her presence in crowds, but it is precisely this ordinariness that contains extraordinary charm.",
+      "paragraph2": "Megumi has a gentle and kind personality, always able to understand others' thoughts and provide appropriate support and encouragement. Although she appears plain, she actually possesses keen insight and a strong heart. In her interactions with Aki Tomoya and others, she gradually reveals her unique charm and importance.",
+      "paragraph3": "Katou Megumi represents a kind of genuine and simple beauty. She doesn't need gorgeous appearance or special talents; her mere existence is enough to warm hearts and become an indispensable presence in others' lives."
+    }
+  },
+  "player": {
+    "play": "Play",
+    "pause": "Pause",
+    "previous": "Previous",
+    "next": "Next",
+    "volume": "Volume",
+    "mute": "Mute",
+    "playlist": "Playlist"
+  },
+  "footer": {
+    "copyright": "© 2024 Katou Megumi Official Website",
+    "dedication": "Dedicated to the cutest Katou Megumi ♡"
+  }
+}

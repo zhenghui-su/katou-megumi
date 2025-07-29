@@ -1,0 +1,79 @@
+{
+  "nav": {
+    "home": "首页",
+    "gallery": "画廊",
+    "about": "关于",
+    "works": "相关作品",
+    "videos": "视频",
+    "community": "管理后台"
+  },
+  "home": {
+    "title": "加藤惠",
+    "subtitle": "かとう めぐみ",
+    "description": "平凡而特别的女主角，拥有治愈人心的温柔力量",
+    "viewCollection": "观看动画",
+    "downloadWallpaper": "下载壁纸",
+    "share": "分享",
+    "welcome": "欢迎来到加藤惠的世界",
+    "subtitle2": "路人女主的养成方法中最可爱的女主角",
+    "startExplore": "开始探索",
+    "features": "网站特色",
+    "characterIntro": {
+      "title": "角色介绍",
+      "description": "了解加藤惠的基本信息、性格特点和在作品中的重要地位",
+      "action": "查看详情"
+    },
+    "gallery": {
+      "title": "精美画廊",
+      "description": "收录了加藤惠的各种精美图片、插画和截图",
+      "action": "浏览画廊"
+    },
+    "quotes": {
+      "title": "经典语录",
+      "description": "收集加藤惠在作品中的经典台词和名言",
+      "action": "即将上线"
+    }
+  },
+  "gallery": {
+    "title": "加藤惠画廊",
+    "subtitle": "收录加藤惠的精美图片集合",
+    "moreImages": "更多精美图片正在整理中，敬请期待..."
+  },
+  "about": {
+    "title": "关于加藤惠",
+    "subtitle": "路人女主的养成方法中的女主角",
+    "basicInfo": {
+      "title": "基本信息",
+      "name": "姓名",
+      "nameValue": "加藤惠（かとう めぐみ）",
+      "work": "作品",
+      "workValue": "路人女主的养成方法",
+      "voice": "声优",
+      "voiceValue": "安野希世乃",
+      "grade": "年级",
+      "gradeValue": "高中二年级"
+    },
+    "personality": {
+      "title": "性格特点"
+    },
+    "introduction": {
+      "title": "角色介绍",
+      "paragraph1": "加藤惠是《路人女主的养成方法》中的女主角，是一个看似平凡却充满魅力的女孩。她拥有着独特的\"路人\"属性，能够在人群中完美地隐藏自己的存在感，但正是这种平凡中蕴含着不平凡的魅力。",
+      "paragraph2": "惠的性格温和善良，总是能够理解他人的想法，并给予适当的支持和鼓励。她虽然看起来平淡无奇，但实际上拥有着敏锐的洞察力和坚强的内心。在与安艺伦也等人的相处中，她逐渐展现出了自己独特的魅力和重要性。",
+      "paragraph3": "加藤惠代表着一种真实而朴素的美好，她不需要华丽的外表或特殊的才能，仅仅是她的存在本身就足以温暖人心，成为他人生活中不可或缺的重要存在。"
+    }
+  },
+  "player": {
+    "play": "播放",
+    "pause": "暂停",
+    "previous": "上一首",
+    "next": "下一首",
+    "volume": "音量",
+    "mute": "静音",
+    "playlist": "播放列表"
+  },
+  "footer": {
+    "copyright": "© 2024 加藤惠专属网站",
+    "dedication": "献给最可爱的加藤惠 ♡"
+  }
+}
