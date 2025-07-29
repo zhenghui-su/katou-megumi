@@ -1,0 +1,25 @@
+{
+	"name": "katou-megumi-monorepo",
+	"version": "1.0.0",
+	"description": "A monorepo project dedicated to Katou Megumi",
+	"private": true,
+	"scripts": {
+		"dev": "pnpm run dev:shared & pnpm --filter @katou-megumi/web dev",
+		"dev:shared": "pnpm --filter @katou-megumi/shared dev",
+		"dev:web": "pnpm --filter @katou-megumi/web dev",
+		"build": "pnpm -r build",
+		"lint": "pnpm -r lint",
+		"clean": "pnpm -r clean",
+		"install:all": "pnpm install"
+	},
+	"devDependencies": {
+		"@types/node": "^20.11.25",
+		"typescript": "^5.8.3",
+		"prettier": "^3.6.2",
+		"eslint": "^9.32.0"
+	},
+	"engines": {
+		"node": ">=18.0.0",
+		"npm": ">=9.0.0"
+	}
+}
