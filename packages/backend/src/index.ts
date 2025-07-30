@@ -5,6 +5,7 @@ import Router from '@koa/router';
 import koaBody from 'koa-body';
 import koaStatic from 'koa-static';
 import path from 'path';
+import fs from 'fs';
 import { initDatabase } from './config/database';
 import { galleryRouter } from './routes/gallery';
 import { videosRouter } from './routes/videos';
@@ -12,6 +13,7 @@ import { worksRouter } from './routes/works';
 import authRoutes from './routes/auth';
 import adminRoutes from './routes/admin';
 import uploadRoutes from './routes/upload';
+import reviewRoutes from './routes/review';
 
 const app = new Koa();
 const router = new Router();
@@ -37,6 +39,41 @@ app.use(
 // 静态文件服务
 app.use(koaStatic(path.join(__dirname, '../public')));
 
+// 临时文件服务路由（用于审核预览）
+router.get('/temp/pending-images/(.*)', async (ctx) => {
+	const filename = ctx.params[0]; // 支持子目录路径
+	const filePath = path.join(process.cwd(), 'temp', 'pending-images', filename);
+	
+	if (fs.existsSync(filePath)) {
+		const stat = fs.statSync(filePath);
+		const ext = path.extname(filename).toLowerCase();
+		let contentType = 'application/octet-stream';
+		
+		switch (ext) {
+			case '.jpg':
+			case '.jpeg':
+				contentType = 'image/jpeg';
+				break;
+			case '.png':
+				contentType = 'image/png';
+				break;
+			case '.gif':
+				contentType = 'image/gif';
+				break;
+			case '.webp':
+				contentType = 'image/webp';
+				break;
+		}
+		
+		ctx.set('Content-Type', contentType);
+		ctx.set('Content-Length', stat.size.toString());
+		ctx.body = fs.createReadStream(filePath);
+	} else {
+		ctx.status = 404;
+		ctx.body = 'File not found';
+	}
+});
+
 // 基础路由
 router.get('/', async (ctx) => {
 	ctx.body = {
@@ -48,7 +85,8 @@ router.get('/', async (ctx) => {
 				works: '/api/works',
 				auth: '/api/auth',
 				admin: '/api/admin',
-				upload: '/api/upload',
+			upload: '/api/upload',
+			review: '/api/review',
 			},
 			features: {
 				cos: '腾讯云对象存储支持',
@@ -77,6 +115,8 @@ app.use(adminRoutes.routes());
 app.use(adminRoutes.allowedMethods());
 app.use(uploadRoutes.routes());
 app.use(uploadRoutes.allowedMethods());
+app.use(reviewRoutes.routes());
+app.use(reviewRoutes.allowedMethods());
 
 // 错误处理
 app.on('error', (err, ctx) => {

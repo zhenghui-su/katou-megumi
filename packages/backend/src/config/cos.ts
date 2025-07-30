@@ -74,11 +74,12 @@ export const deleteFromCOS = async (fileName: string): Promise<void> => {
 };
 
 // 生成唯一文件名
-export const generateFileName = (originalName: string): string => {
+export const generateFileName = (originalName: string, category?: string): string => {
 	const timestamp = Date.now();
 	const random = Math.random().toString(36).substring(2, 8);
-	const ext = originalName.split('.').pop();
-	return `uploads/${timestamp}_${random}.${ext}`;
+	const ext = originalName.includes('.') ? originalName.split('.').pop() : '';
+	const basePath = category ? `images/${category}` : 'uploads';
+	return ext ? `${basePath}/${timestamp}_${random}.${ext}` : `${basePath}/${timestamp}_${random}`;
 };
 
 export { cos, cosConfig };

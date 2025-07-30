@@ -1,5 +1,7 @@
 import Router from '@koa/router';
 import { Context } from 'koa';
+import { AppDataSource, isDatabaseConnected } from '../config/database';
+import { Image } from '../entities/Image';
 
 const router = new Router({ prefix: '/api/gallery' });
 
@@ -79,18 +81,38 @@ const galleryData = {
 	],
 };
 
-// 获取所有分类
+// 获取所有已通过审核的图片
 router.get('/', async (ctx: Context) => {
-	ctx.body = {
-		success: true,
-		data: {
-			categories: Object.keys(galleryData),
-			total: Object.values(galleryData).reduce(
-				(sum, arr) => sum + arr.length,
-				0
-			),
-		},
-	};
+	try {
+		if (!isDatabaseConnected) {
+			ctx.status = 500;
+			ctx.body = {
+				success: false,
+				message: '数据库连接失败',
+			};
+			return;
+		}
+
+		const imageRepository = AppDataSource.getRepository(Image);
+		const images = await imageRepository.find({
+			order: {
+				createdAt: 'DESC',
+			},
+		});
+
+		ctx.body = {
+			success: true,
+			data: images,
+			total: images.length,
+		};
+	} catch (error) {
+		console.error('获取图片列表失败:', error);
+		ctx.status = 500;
+		ctx.body = {
+			success: false,
+			message: '获取图片列表失败',
+		};
+	}
 });
 
 // 获取指定分类的图片

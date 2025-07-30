@@ -6,6 +6,7 @@ import { Image } from '../entities/Image';
 import { Video } from '../entities/Video';
 import { Work } from '../entities/Work';
 import { SiteStats } from '../entities/SiteStats';
+import { PendingImage } from '../entities/PendingImage';
 
 // 数据库配置
 export const AppDataSource = new DataSource({
@@ -17,7 +18,7 @@ export const AppDataSource = new DataSource({
 	database: process.env.DB_NAME || 'katou_megumi_fan_site',
 	synchronize: true, // 开发环境自动同步表结构
 	logging: false,
-	entities: [User, Image, Video, Work, SiteStats],
+	entities: [User, Image, Video, Work, SiteStats, PendingImage],
 	migrations: [],
 	subscribers: [],
 });
