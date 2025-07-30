@@ -4,7 +4,6 @@ import {
 	Container,
 	Typography,
 	Paper,
-	Grid,
 	Card,
 	CardContent,
 	Button,
@@ -13,7 +12,6 @@ import {
 	IconButton,
 	Menu,
 	MenuItem,
-	Avatar,
 } from '@mui/material';
 import {
 	Dashboard as DashboardIcon,
@@ -23,6 +21,10 @@ import {
 	Settings,
 	ExitToApp,
 	AccountCircle,
+	RateReview,
+	Pending,
+	CheckCircle,
+	Cancel,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -41,6 +43,13 @@ interface DashboardStats {
 	totalViews: number;
 }
 
+interface ReviewStats {
+	pending: number;
+	approved: number;
+	rejected: number;
+	total: number;
+}
+
 const Dashboard: React.FC = () => {
 	const navigate = useNavigate();
 	const [user, setUser] = useState<User | null>(null);
@@ -49,6 +58,12 @@ const Dashboard: React.FC = () => {
 		totalImages: 0,
 		totalVideos: 0,
 		totalViews: 0,
+	});
+	const [reviewStats, setReviewStats] = useState<ReviewStats>({
+		pending: 0,
+		approved: 0,
+		rejected: 0,
+		total: 0,
 	});
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -71,6 +86,7 @@ const Dashboard: React.FC = () => {
 
 		// 获取仪表板统计数据
 		fetchDashboardStats();
+		fetchReviewStats();
 	}, [navigate]);
 
 	const fetchDashboardStats = async () => {
@@ -88,6 +104,24 @@ const Dashboard: React.FC = () => {
 			}
 		} catch (error) {
 			console.error('获取统计数据失败:', error);
+		}
+	};
+
+	const fetchReviewStats = async () => {
+		try {
+			const token = localStorage.getItem('admin_token');
+			const response = await fetch('http://localhost:3001/api/review/stats', {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				setReviewStats(data.data);
+			}
+		} catch (error) {
+			console.error('获取审核统计失败:', error);
 		}
 	};
 
@@ -129,6 +163,33 @@ const Dashboard: React.FC = () => {
 			value: stats.totalViews,
 			icon: <DashboardIcon sx={{ fontSize: 40 }} />,
 			color: '#ffc9e6',
+		},
+	];
+
+	const reviewCards = [
+		{
+			title: '待审核',
+			value: reviewStats.pending,
+			icon: <Pending sx={{ fontSize: 40 }} />,
+			color: '#ff9800',
+		},
+		{
+			title: '已通过',
+			value: reviewStats.approved,
+			icon: <CheckCircle sx={{ fontSize: 40 }} />,
+			color: '#4caf50',
+		},
+		{
+			title: '已拒绝',
+			value: reviewStats.rejected,
+			icon: <Cancel sx={{ fontSize: 40 }} />,
+			color: '#f44336',
+		},
+		{
+			title: '审核总数',
+			value: reviewStats.total,
+			icon: <RateReview sx={{ fontSize: 40 }} />,
+			color: '#9c27b0',
 		},
 	];
 
@@ -298,11 +359,75 @@ const Dashboard: React.FC = () => {
 							<Button
 								fullWidth
 								variant='outlined'
-								startIcon={<Settings />}
+								startIcon={<RateReview />}
 								sx={{ py: 2 }}
+								onClick={() => window.open('/management/review', '_blank')}
 							>
-								系统设置
+								图片审核
 							</Button>
+						</Box>
+					</Paper>
+				</motion.div>
+
+				{/* 审核统计 */}
+				<motion.div
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.6, delay: 0.5 }}
+				>
+					<Paper sx={{ p: 3 }}>
+						<Typography
+							variant='h5'
+							component='h2'
+							sx={{ mb: 3, fontWeight: 'bold' }}
+						>
+							图片审核统计
+						</Typography>
+						<Box
+							sx={{
+								display: 'grid',
+								gridTemplateColumns: {
+									xs: '1fr',
+									sm: '1fr 1fr',
+									md: '1fr 1fr 1fr 1fr',
+								},
+								gap: 3,
+							}}
+						>
+							{reviewCards.map((card, index) => (
+								<Box key={card.title}>
+									<motion.div
+										initial={{ opacity: 0, y: 20 }}
+										animate={{ opacity: 1, y: 0 }}
+										transition={{ duration: 0.6, delay: 0.6 + index * 0.1 }}
+									>
+										<Card
+											sx={{
+												height: '100%',
+												transition: 'all 0.3s ease',
+												'&:hover': {
+													transform: 'translateY(-4px)',
+													boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+												},
+											}}
+										>
+											<CardContent sx={{ textAlign: 'center', p: 3 }}>
+												<Box sx={{ color: card.color, mb: 2 }}>{card.icon}</Box>
+												<Typography
+													variant='h4'
+													component='div'
+													sx={{ fontWeight: 'bold', color: card.color }}
+												>
+													{card.value.toLocaleString()}
+												</Typography>
+												<Typography variant='body2' color='text.secondary'>
+													{card.title}
+												</Typography>
+											</CardContent>
+										</Card>
+									</motion.div>
+								</Box>
+							))}
 						</Box>
 					</Paper>
 				</motion.div>

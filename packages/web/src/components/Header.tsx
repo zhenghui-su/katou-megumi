@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
 	AppBar,
 	Toolbar,
@@ -7,15 +7,23 @@ import {
 	Box,
 	Container,
 	IconButton,
+	Menu,
+	MenuItem,
+	Avatar,
 } from '@mui/material';
-import { FavoriteBorder, Search, NotificationsNone } from '@mui/icons-material';
+import { FavoriteBorder, Search, NotificationsNone, AccountCircle, ExitToApp } from '@mui/icons-material';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { LanguageSwitcher } from '@katou-megumi/shared';
+import { useAuth } from '../contexts/AuthContext';
+import AuthDialog from '../pages/Auth';
 
 const Header: React.FC = () => {
 	// const { t } = useTranslation();
 	const location = useLocation();
+	const { user, isAuthenticated, logout } = useAuth();
+	const [authDialogOpen, setAuthDialogOpen] = useState(false);
+	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
 	const navItems = [
 		{ label: '首页', path: '/' },
@@ -23,7 +31,6 @@ const Header: React.FC = () => {
 		{ label: '图片画廊', path: '/gallery' },
 		{ label: '相关作品', path: '/works' },
 		{ label: '精彩视频', path: '/videos' },
-		{ label: '文件上传', path: '/upload' },
 	];
 
 	return (
@@ -145,20 +152,84 @@ const Header: React.FC = () => {
 						</IconButton>
 
 						<IconButton
-							size='small'
-							sx={{
-								color: '#666',
-								'&:hover': {
-									color: '#ff4081',
-									backgroundColor: 'rgba(255, 64, 129, 0.1)',
-								},
-							}}
-						>
-							<NotificationsNone fontSize='small' />
-						</IconButton>
-					</Box>
+									size='small'
+									sx={{
+										color: '#666',
+										'&:hover': {
+											color: '#ff4081',
+											backgroundColor: 'rgba(255, 64, 129, 0.1)',
+										},
+									}}
+								>
+									<NotificationsNone fontSize='small' />
+								</IconButton>
+
+								{/* 用户认证区域 */}
+								{isAuthenticated ? (
+									<>
+										<IconButton
+											size='small'
+											onClick={(e) => setAnchorEl(e.currentTarget)}
+											sx={{ ml: 1 }}
+										>
+											<Avatar
+												sx={{
+													width: 32,
+													height: 32,
+													bgColor: 'primary.main',
+													fontSize: '0.9rem',
+												}}
+											>
+												{user?.username.charAt(0).toUpperCase()}
+											</Avatar>
+										</IconButton>
+										<Menu
+											anchorEl={anchorEl}
+											open={Boolean(anchorEl)}
+											onClose={() => setAnchorEl(null)}
+										>
+											<MenuItem onClick={() => setAnchorEl(null)}>
+												<AccountCircle sx={{ mr: 1 }} />
+												{user?.username}
+											</MenuItem>
+											<MenuItem
+												onClick={() => {
+													logout();
+													setAnchorEl(null);
+												}}
+											>
+												<ExitToApp sx={{ mr: 1 }} />
+												退出登录
+											</MenuItem>
+										</Menu>
+									</>
+								) : (
+									<Button
+										variant='outlined'
+										size='small'
+										onClick={() => setAuthDialogOpen(true)}
+										sx={{
+											ml: 2,
+											borderColor: '#ff4081',
+											color: '#ff4081',
+											'&:hover': {
+												backgroundColor: '#ff4081',
+												color: 'white',
+											},
+										}}
+									>
+										登录/注册
+									</Button>
+								)}
+							</Box>
 				</Toolbar>
 			</Container>
+			
+			{/* 认证对话框 */}
+			<AuthDialog
+				open={authDialogOpen}
+				onClose={() => setAuthDialogOpen(false)}
+			/>
 		</AppBar>
 	);
 };

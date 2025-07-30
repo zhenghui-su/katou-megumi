@@ -1,33 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import { MusicPlayer } from '@katou-megumi/shared';
 import {
-	Box,
-	Typography,
-	Container,
-	Grid,
-	Button,
+	ArrowForward,
+	Brush,
+	Download,
+	Favorite,
+	PhotoLibrary,
+	PlayArrow,
+	Share,
+	VideoLibrary,
+	Wallpaper,
+	Work,
+} from '@mui/icons-material';
+import {
 	Avatar,
+	Box,
+	Button,
 	Card,
 	CardContent,
 	CardMedia,
+	Container,
 	Paper,
+	Typography,
 } from '@mui/material';
-import {
-	PlayArrow,
-	Download,
-	Share,
-	Favorite,
-	PhotoLibrary,
-	VideoLibrary,
-	Person,
-	Work,
-	Settings,
-	ArrowForward,
-	Wallpaper,
-	Brush,
-} from '@mui/icons-material';
 import { motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MusicPlayer } from '@katou-megumi/shared';
 import { Link } from 'react-router-dom';
 
 // API 基础URL
