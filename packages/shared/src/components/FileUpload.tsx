@@ -10,6 +10,10 @@ import {
 	ListItem,
 	ListItemText,
 	ListItemSecondaryAction,
+	FormControl,
+	InputLabel,
+	Select,
+	MenuItem,
 } from '@mui/material';
 import {
 	CloudUpload,
@@ -17,7 +21,6 @@ import {
 	CheckCircle,
 	Error as ErrorIcon,
 } from '@mui/icons-material';
-import { useTranslation } from 'react-i18next';
 
 interface UploadedFile {
 	url: string;
@@ -35,6 +38,8 @@ interface FileUploadProps {
 	onUploadError?: (error: string) => void;
 	authToken?: string;
 	apiUrl?: string;
+	showCategorySelect?: boolean;
+	defaultCategory?: 'official' | 'anime' | 'wallpaper' | 'fanart';
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
@@ -45,14 +50,19 @@ const FileUpload: React.FC<FileUploadProps> = ({
 	onUploadError,
 	authToken,
 	apiUrl = 'http://localhost:3001/api/upload',
+	showCategorySelect = false,
+	defaultCategory = 'fanart',
 }) => {
-	const { t } = useTranslation();
+	// const { t } = useTranslation();
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [uploading, setUploading] = useState(false);
-	const [uploadProgress, setUploadProgress] = useState(0);
+	const [_uploadProgress, setUploadProgress] = useState(0);
 	const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
 	const [error, setError] = useState<string | null>(null);
 	const [dragOver, setDragOver] = useState(false);
+	const [selectedCategory, setSelectedCategory] = useState<
+		'official' | 'anime' | 'wallpaper' | 'fanart'
+	>(defaultCategory);
 
 	// 格式化文件大小
 	const formatFileSize = (bytes: number): string => {
@@ -113,6 +123,11 @@ const FileUpload: React.FC<FileUploadProps> = ({
 				});
 			} else {
 				formData.append('file', validFiles[0]);
+			}
+
+			// 添加分类信息
+			if (showCategorySelect) {
+				formData.append('category', selectedCategory);
 			}
 
 			const endpoint = multiple ? `${apiUrl}/multiple` : `${apiUrl}/single`;
@@ -197,6 +212,28 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
 	return (
 		<Box sx={{ width: '100%', maxWidth: 600 }}>
+			{/* 分类选择器 */}
+			{showCategorySelect && (
+				<FormControl fullWidth sx={{ mb: 2 }}>
+					<InputLabel>选择分类</InputLabel>
+					<Select
+						value={selectedCategory}
+						onChange={(e) =>
+							setSelectedCategory(
+								e.target.value as 'official' | 'anime' | 'wallpaper' | 'fanart'
+							)
+						}
+						label='选择分类'
+						disabled={uploading}
+					>
+						<MenuItem value='official'>官方图片</MenuItem>
+						<MenuItem value='anime'>动画截图</MenuItem>
+						<MenuItem value='wallpaper'>壁纸</MenuItem>
+						<MenuItem value='fanart'>同人作品</MenuItem>
+					</Select>
+				</FormControl>
+			)}
+
 			{/* 上传区域 */}
 			<Box
 				onClick={openFileSelector}
