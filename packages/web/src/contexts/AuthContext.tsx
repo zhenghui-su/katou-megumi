@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+	createContext,
+	useContext,
+	useState,
+	useEffect,
+	ReactNode,
+} from 'react';
 
 interface User {
 	id: number;
@@ -12,7 +18,11 @@ interface AuthContextType {
 	token: string | null;
 	isAuthenticated: boolean;
 	login: (username: string, password: string) => Promise<boolean>;
-	register: (username: string, email: string, password: string) => Promise<boolean>;
+	register: (
+		username: string,
+		email: string,
+		password: string
+	) => Promise<boolean>;
 	logout: () => void;
 	loading: boolean;
 	error: string | null;
@@ -42,7 +52,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 	useEffect(() => {
 		const savedToken = localStorage.getItem('user_token');
 		const savedUser = localStorage.getItem('user_data');
-		
+
 		if (savedToken && savedUser) {
 			try {
 				setToken(savedToken);
@@ -56,12 +66,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 		setLoading(false);
 	}, []);
 
-	const login = async (username: string, password: string): Promise<boolean> => {
+	const login = async (
+		username: string,
+		password: string
+	): Promise<boolean> => {
 		setLoading(true);
 		setError(null);
-		
+
 		try {
-			const response = await fetch('http://localhost:3001/api/auth/login', {
+			const response = await fetch('http://localhost:8080/api/auth/login', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -89,12 +102,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 		}
 	};
 
-	const register = async (username: string, email: string, password: string): Promise<boolean> => {
+	const register = async (
+		username: string,
+		email: string,
+		password: string
+	): Promise<boolean> => {
 		setLoading(true);
 		setError(null);
-		
+
 		try {
-			const response = await fetch('http://localhost:3001/api/auth/register', {
+			const response = await fetch('http://localhost:8080/api/auth/register', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -136,9 +153,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 		error,
 	};
 
-	return (
-		<AuthContext.Provider value={value}>
-			{children}
-		</AuthContext.Provider>
-	);
+	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

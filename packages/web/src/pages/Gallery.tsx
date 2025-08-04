@@ -45,7 +45,7 @@ interface GalleryImage {
 
 const Gallery: React.FC = () => {
 	const { isAuthenticated, token } = useAuth();
-	const [showUpload, setShowUpload] = useState(false);
+	const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 	const [message, setMessage] = useState<{
 		type: 'success' | 'error' | 'info';
 		text: string;
@@ -66,7 +66,7 @@ const Gallery: React.FC = () => {
 	const fetchImages = async () => {
 		try {
 			setLoading(true);
-			const response = await fetch('http://localhost:3001/api/gallery');
+			const response = await fetch('http://localhost:8080/api/gallery');
 			if (response.ok) {
 				const result = await response.json();
 				if (result.success) {
@@ -93,6 +93,7 @@ const Gallery: React.FC = () => {
 			text: `成功上传 ${files.length} 个文件！图片已提交审核，审核通过后将显示在画廊中。`,
 		});
 		setTimeout(() => setMessage(null), 5000);
+		setUploadDialogOpen(false);
 		// 上传成功后可以选择刷新图片列表（如果需要显示最新审核通过的图片）
 		// fetchImages();
 	};
@@ -221,39 +222,7 @@ const Gallery: React.FC = () => {
 				</Alert>
 			)}
 
-			{/* 用户上传区域 */}
-			{isAuthenticated && showUpload && (
-				<motion.div
-					initial={{ opacity: 0, y: 30 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.6 }}
-				>
-					<Paper elevation={3} sx={{ p: 3, mt: 4 }}>
-						<Typography variant='h5' gutterBottom>
-							上传图片
-						</Typography>
-						<Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
-							上传的图片将提交给管理员审核，审核通过后会显示在画廊中
-						</Typography>
-						<FileUpload
-							multiple={true}
-							acceptedTypes={['image/*']}
-							maxFileSize={5 * 1024 * 1024} // 5MB
-							onUploadSuccess={handleUploadSuccess}
-							onUploadError={handleUploadError}
-							authToken={token || undefined}
-							apiUrl='http://localhost:3001/api/upload'
-							showCategorySelect={true}
-							defaultCategory='fanart'
-						/>
-						<Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-							<Button variant='outlined' onClick={() => setShowUpload(false)}>
-								取消
-							</Button>
-						</Box>
-					</Paper>
-				</motion.div>
-			)}
+
 
 			<Box sx={{ mt: 6, textAlign: 'center' }}>
 				<Typography variant='body1' color='text.secondary'>
@@ -262,11 +231,11 @@ const Gallery: React.FC = () => {
 			</Box>
 
 			{/* 浮动上传按钮 */}
-			{isAuthenticated && !showUpload && (
+			{isAuthenticated && (
 				<Fab
 					color='primary'
 					aria-label='upload'
-					onClick={() => setShowUpload(true)}
+					onClick={() => setUploadDialogOpen(true)}
 					sx={{
 						position: 'fixed',
 						bottom: 32,
@@ -351,6 +320,55 @@ const Gallery: React.FC = () => {
 						</Typography>
 					</DialogActions>
 				)}
+			</Dialog>
+
+			{/* 上传弹窗 */}
+			<Dialog
+				open={uploadDialogOpen}
+				onClose={() => setUploadDialogOpen(false)}
+				maxWidth='md'
+				fullWidth
+				PaperProps={{
+					sx: {
+						maxHeight: '80vh',
+						overflow: 'auto',
+					},
+				}}
+			>
+				<DialogTitle
+					sx={{
+						display: 'flex',
+						justifyContent: 'space-between',
+						alignItems: 'center',
+					}}
+				>
+					<Typography variant='h6'>上传图片</Typography>
+					<IconButton
+						onClick={() => setUploadDialogOpen(false)}
+						size='small'
+					>
+						<Close />
+					</IconButton>
+				</DialogTitle>
+				<DialogContent>
+					<Typography variant='body2' color='text.secondary' sx={{ mb: 3 }}>
+						上传的图片将提交给管理员审核，审核通过后会显示在画廊中
+					</Typography>
+					<FileUpload
+						multiple={true}
+						acceptedTypes={['image/*']}
+						maxFileSize={5 * 1024 * 1024} // 5MB
+						onUploadSuccess={handleUploadSuccess}
+						onUploadError={handleUploadError}
+						authToken={token || undefined}
+						apiUrl='http://localhost:8080/api/upload'
+						showCategorySelect={true}
+						defaultCategory='fanart'
+					/>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setUploadDialogOpen(false)}>取消</Button>
+				</DialogActions>
 			</Dialog>
 		</Container>
 	);

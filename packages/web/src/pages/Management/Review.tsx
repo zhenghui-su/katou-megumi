@@ -112,7 +112,7 @@ const Review: React.FC = () => {
 
 	// 处理图片加载错误
 	const handleImageError = (imageId: number) => {
-		setImageErrors(prev => new Set(prev).add(imageId));
+		setImageErrors((prev) => new Set(prev).add(imageId));
 	};
 
 	const statusMap = {
@@ -137,7 +137,7 @@ const Review: React.FC = () => {
 		try {
 			const token = localStorage.getItem('admin_token');
 			const status = statusMap[tabValue as keyof typeof statusMap];
-			let url = `http://localhost:3001/api/review/pending?status=${status}&page=${page}&limit=12`;
+			let url = `http://localhost:8080/api/review/pending?status=${status}&page=${page}&limit=12`;
 			if (categoryFilter !== 'all') {
 				url += `&category=${categoryFilter}`;
 			}
@@ -167,7 +167,7 @@ const Review: React.FC = () => {
 		try {
 			const token = localStorage.getItem('admin_token');
 			const response = await fetch(
-				`http://localhost:3001/api/review/approve/${selectedImage.id}`,
+				`http://localhost:8080/api/review/approve/${selectedImage.id}`,
 				{
 					method: 'POST',
 					headers: {
@@ -353,7 +353,7 @@ const Review: React.FC = () => {
 														justifyContent: 'center',
 														backgroundColor: '#f5f5f5',
 														color: '#999',
-														cursor: 'pointer'
+														cursor: 'pointer',
 													}}
 													onClick={() => openPreviewDialog(image)}
 												>
@@ -369,7 +369,7 @@ const Review: React.FC = () => {
 														maxHeight: '120px',
 														width: '100%',
 														objectFit: 'cover',
-														cursor: 'pointer'
+														cursor: 'pointer',
 													}}
 													onClick={() => openPreviewDialog(image)}
 													onError={() => handleImageError(image.id)}
@@ -377,8 +377,8 @@ const Review: React.FC = () => {
 											)}
 											<CardContent sx={{ flexGrow: 1 }}>
 												<Typography variant='h6' noWrap title={image.title}>
-												{removeFileExtension(image.title)}
-											</Typography>
+													{removeFileExtension(image.title)}
+												</Typography>
 												<Typography variant='body2' color='text.secondary'>
 													上传者: {image.user.username}
 												</Typography>
@@ -452,22 +452,22 @@ const Review: React.FC = () => {
 											}}
 										>
 											<CardMedia
-										component='img'
-										image={image.url}
-										alt={image.title}
-										sx={{
-											height: '120px',
-											maxHeight: '120px',
-											width: '100%',
-											objectFit: 'cover',
-											cursor: 'pointer'
-										}}
-										onClick={() => openPreviewDialog(image)}
-									/>
+												component='img'
+												image={image.url}
+												alt={image.title}
+												sx={{
+													height: '120px',
+													maxHeight: '120px',
+													width: '100%',
+													objectFit: 'cover',
+													cursor: 'pointer',
+												}}
+												onClick={() => openPreviewDialog(image)}
+											/>
 											<CardContent sx={{ flexGrow: 1 }}>
 												<Typography variant='h6' noWrap title={image.title}>
-												{removeFileExtension(image.title)}
-											</Typography>
+													{removeFileExtension(image.title)}
+												</Typography>
 												<Typography variant='body2' color='text.secondary'>
 													上传者: {image.user.username}
 												</Typography>
@@ -515,22 +515,22 @@ const Review: React.FC = () => {
 											}}
 										>
 											<CardMedia
-										component='img'
-										image={image.url}
-										alt={image.title}
-										sx={{
-											height: '120px',
-											maxHeight: '120px',
-											width: '100%',
-											objectFit: 'cover',
-											cursor: 'pointer'
-										}}
-										onClick={() => openPreviewDialog(image)}
-									/>
+												component='img'
+												image={image.url}
+												alt={image.title}
+												sx={{
+													height: '120px',
+													maxHeight: '120px',
+													width: '100%',
+													objectFit: 'cover',
+													cursor: 'pointer',
+												}}
+												onClick={() => openPreviewDialog(image)}
+											/>
 											<CardContent sx={{ flexGrow: 1 }}>
 												<Typography variant='h6' noWrap title={image.title}>
-												{removeFileExtension(image.title)}
-											</Typography>
+													{removeFileExtension(image.title)}
+												</Typography>
 												<Typography variant='body2' color='text.secondary'>
 													上传者: {image.user.username}
 												</Typography>
@@ -654,30 +654,32 @@ const Review: React.FC = () => {
 						{selectedImage && (
 							<Box>
 								<Box
-								sx={{
-									display: 'flex',
-									justifyContent: 'center',
-									alignItems: 'center',
-									mb: 2,
-									border: '1px solid #e0e0e0',
-									borderRadius: 1,
-									minHeight: '200px',
-								}}
-							>
-								<img
-									src={selectedImage.url}
-									alt={selectedImage.title}
-									style={{
-										maxWidth: '100%',
-										maxHeight: '70vh',
-										height: 'auto',
-										width: 'auto',
-										objectFit: 'contain',
-										display: 'block',
+									sx={{
+										display: 'flex',
+										justifyContent: 'center',
+										alignItems: 'center',
+										mb: 2,
+										border: '1px solid #e0e0e0',
+										borderRadius: 1,
+										minHeight: '200px',
 									}}
-								/>
+								>
+									<img
+										src={selectedImage.url}
+										alt={selectedImage.title}
+										style={{
+											maxWidth: '100%',
+											maxHeight: '70vh',
+											height: 'auto',
+											width: 'auto',
+											objectFit: 'contain',
+											display: 'block',
+										}}
+									/>
 								</Box>
-								<Typography variant='h6'>{removeFileExtension(selectedImage.title)}</Typography>
+								<Typography variant='h6'>
+									{removeFileExtension(selectedImage.title)}
+								</Typography>
 								<Typography variant='body2' color='text.secondary'>
 									上传者: {selectedImage.user.username} (
 									{selectedImage.user.email})

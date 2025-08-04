@@ -92,7 +92,7 @@ const Dashboard: React.FC = () => {
 	const fetchDashboardStats = async () => {
 		try {
 			const token = localStorage.getItem('admin_token');
-			const response = await fetch('http://localhost:3001/api/admin/stats', {
+			const response = await fetch('http://localhost:8080/api/admin/stats', {
 				headers: {
 					Authorization: `Bearer ${token}`,
 				},
@@ -110,7 +110,7 @@ const Dashboard: React.FC = () => {
 	const fetchReviewStats = async () => {
 		try {
 			const token = localStorage.getItem('admin_token');
-			const response = await fetch('http://localhost:3001/api/review/stats', {
+			const response = await fetch('http://localhost:8080/api/review/stats', {
 				headers: {
 					Authorization: `Bearer ${token}`,
 				},

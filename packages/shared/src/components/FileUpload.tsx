@@ -49,7 +49,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
 	onUploadSuccess,
 	onUploadError,
 	authToken,
-	apiUrl = 'http://localhost:3001/api/upload',
+	apiUrl = 'http://localhost:8080/api/upload',
 	showCategorySelect = false,
 	defaultCategory = 'fanart',
 }) => {

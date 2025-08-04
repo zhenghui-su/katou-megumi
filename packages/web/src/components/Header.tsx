@@ -10,20 +10,25 @@ import {
 	Menu,
 	MenuItem,
 	Avatar,
+	Badge,
 } from '@mui/material';
 import { FavoriteBorder, Search, NotificationsNone, AccountCircle, ExitToApp } from '@mui/icons-material';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { LanguageSwitcher } from '@katou-megumi/shared';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotification } from '../contexts/NotificationContext';
 import AuthDialog from '../pages/Auth';
+import NotificationPopover from './NotificationPopover';
 
 const Header: React.FC = () => {
 	// const { t } = useTranslation();
 	const location = useLocation();
 	const { user, isAuthenticated, logout } = useAuth();
+	const { unreadCount } = useNotification();
 	const [authDialogOpen, setAuthDialogOpen] = useState(false);
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+	const [notificationAnchorEl, setNotificationAnchorEl] = useState<null | HTMLElement>(null);
 
 	const navItems = [
 		{ label: '首页', path: '/' },
@@ -151,18 +156,23 @@ const Header: React.FC = () => {
 							<FavoriteBorder fontSize='small' />
 						</IconButton>
 
-						<IconButton
-									size='small'
-									sx={{
-										color: '#666',
-										'&:hover': {
-											color: '#ff4081',
-											backgroundColor: 'rgba(255, 64, 129, 0.1)',
-										},
-									}}
-								>
+						{isAuthenticated && (
+							<IconButton
+								size='small'
+								onClick={(e) => setNotificationAnchorEl(e.currentTarget)}
+								sx={{
+									color: '#666',
+									'&:hover': {
+										color: '#ff4081',
+										backgroundColor: 'rgba(255, 64, 129, 0.1)',
+									},
+								}}
+							>
+								<Badge badgeContent={unreadCount} color='error'>
 									<NotificationsNone fontSize='small' />
-								</IconButton>
+								</Badge>
+							</IconButton>
+						)}
 
 								{/* 用户认证区域 */}
 								{isAuthenticated ? (
@@ -229,6 +239,13 @@ const Header: React.FC = () => {
 			<AuthDialog
 				open={authDialogOpen}
 				onClose={() => setAuthDialogOpen(false)}
+			/>
+			
+			{/* 通知弹窗 */}
+			<NotificationPopover
+				anchorEl={notificationAnchorEl}
+				open={Boolean(notificationAnchorEl)}
+				onClose={() => setNotificationAnchorEl(null)}
 			/>
 		</AppBar>
 	);

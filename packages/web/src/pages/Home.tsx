@@ -28,7 +28,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 // API 基础URL
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = 'http://localhost:8080/api';
 
 // 类型定义
 interface Work {

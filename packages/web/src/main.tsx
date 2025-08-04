@@ -6,6 +6,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import App from './App';
 import './styles/index.css';
 import { i18n } from '@katou-megumi/shared';
+import { NotificationProvider } from './contexts/NotificationContext';
 
 // 初始化i18n
 i18n;
@@ -66,7 +67,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 		<BrowserRouter>
 			<ThemeProvider theme={theme}>
 				<CssBaseline />
-				<App />
+				<NotificationProvider>
+					<App />
+				</NotificationProvider>
 			</ThemeProvider>
 		</BrowserRouter>
 	</React.StrictMode>

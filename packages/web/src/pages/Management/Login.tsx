@@ -71,7 +71,7 @@ const Login: React.FC = () => {
 		setError('');
 
 		try {
-			const response = await fetch('http://localhost:3001/api/auth/login', {
+			const response = await fetch('http://localhost:8080/api/auth/login', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -110,7 +110,7 @@ const Login: React.FC = () => {
 		}
 
 		try {
-			const response = await fetch('http://localhost:3001/api/auth/register', {
+			const response = await fetch('http://localhost:8080/api/auth/register', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
