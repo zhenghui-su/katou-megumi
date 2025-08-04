@@ -55,6 +55,13 @@ const Gallery: React.FC = () => {
 	const [previewOpen, setPreviewOpen] = useState(false);
 	const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
 
+	// 去除文件扩展名的函数
+	const removeFileExtension = (filename: string): string => {
+		const lastDotIndex = filename.lastIndexOf('.');
+		if (lastDotIndex === -1) return filename;
+		return filename.substring(0, lastDotIndex);
+	};
+
 	// 获取已通过审核的图片
 	const fetchImages = async () => {
 		try {
@@ -156,7 +163,7 @@ const Gallery: React.FC = () => {
 			) : (
 				<Grid container spacing={4}>
 					{images.map((image, index) => (
-						<Grid item xs={12} sm={6} md={4} key={image.id}>
+						<Grid key={image.id}>
 							<motion.div
 								initial={{ opacity: 0, y: 30 }}
 								animate={{ opacity: 1, y: 0 }}
@@ -178,19 +185,19 @@ const Gallery: React.FC = () => {
 									onClick={() => handleImageClick(image)}
 								>
 									<CardMedia
-								component='img'
-								image={image.url}
-								alt={image.title}
-								sx={{
-									height: '200px',
-									maxHeight: '200px',
-									width: '100%',
-									objectFit: 'cover',
-								}}
-							/>
+										component='img'
+										image={image.url}
+										alt={image.title}
+										sx={{
+											height: '200px',
+											maxHeight: '200px',
+											width: '100%',
+											objectFit: 'cover',
+										}}
+									/>
 									<CardContent sx={{ flexGrow: 1 }}>
 										<Typography variant='h6' component='h3' sx={{ mb: 1 }}>
-											{image.title}
+											{removeFileExtension(image.title)}
 										</Typography>
 										<Typography variant='body2' color='text.secondary'>
 											{image.description}
@@ -293,7 +300,9 @@ const Gallery: React.FC = () => {
 					}}
 				>
 					<Typography variant='h6'>
-						{selectedImage?.title || '图片预览'}
+						{selectedImage
+							? removeFileExtension(selectedImage.title)
+							: '图片预览'}
 					</Typography>
 					<Box sx={{ display: 'flex', gap: 1 }}>
 						<IconButton

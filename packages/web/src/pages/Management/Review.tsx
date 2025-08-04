@@ -100,6 +100,20 @@ const Review: React.FC = () => {
 		type: 'success' | 'error';
 		text: string;
 	} | null>(null);
+	const [categoryFilter, setCategoryFilter] = useState<string>('all');
+	const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+
+	// 去除文件扩展名的函数
+	const removeFileExtension = (filename: string): string => {
+		const lastDotIndex = filename.lastIndexOf('.');
+		if (lastDotIndex === -1) return filename;
+		return filename.substring(0, lastDotIndex);
+	};
+
+	// 处理图片加载错误
+	const handleImageError = (imageId: number) => {
+		setImageErrors(prev => new Set(prev).add(imageId));
+	};
 
 	const statusMap = {
 		0: 'pending',
@@ -116,21 +130,22 @@ const Review: React.FC = () => {
 		}
 
 		fetchImages();
-	}, [navigate, tabValue, page]);
+	}, [navigate, tabValue, page, categoryFilter]);
 
 	const fetchImages = async () => {
 		setLoading(true);
 		try {
 			const token = localStorage.getItem('admin_token');
 			const status = statusMap[tabValue as keyof typeof statusMap];
-			const response = await fetch(
-				`http://localhost:3001/api/review/pending?status=${status}&page=${page}&limit=12`,
-				{
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				}
-			);
+			let url = `http://localhost:3001/api/review/pending?status=${status}&page=${page}&limit=12`;
+			if (categoryFilter !== 'all') {
+				url += `&category=${categoryFilter}`;
+			}
+			const response = await fetch(url, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
 
 			if (response.ok) {
 				const data = await response.json();
@@ -283,6 +298,27 @@ const Review: React.FC = () => {
 					</Tabs>
 				</Paper>
 
+				{/* 类别筛选器 */}
+				<Paper sx={{ p: 2, mb: 3 }}>
+					<FormControl sx={{ minWidth: 200 }}>
+						<InputLabel>按类别筛选</InputLabel>
+						<Select
+							value={categoryFilter}
+							onChange={(e) => {
+								setCategoryFilter(e.target.value);
+								setPage(1);
+							}}
+							label='按类别筛选'
+						>
+							<MenuItem value='all'>全部类别</MenuItem>
+							<MenuItem value='official'>官方图片</MenuItem>
+							<MenuItem value='anime'>动漫截图</MenuItem>
+							<MenuItem value='wallpaper'>精美壁纸</MenuItem>
+							<MenuItem value='fanart'>同人作品</MenuItem>
+						</Select>
+					</FormControl>
+				</Paper>
+
 				{/* 图片列表 */}
 				<TabPanel value={tabValue} index={0}>
 					{loading ? (
@@ -307,23 +343,42 @@ const Review: React.FC = () => {
 												flexDirection: 'column',
 											}}
 										>
-											<CardMedia
-										component='img'
-										image={image.url}
-										alt={image.title}
-										sx={{
-											height: '120px',
-											maxHeight: '120px',
-											width: '100%',
-											objectFit: 'cover',
-											cursor: 'pointer'
-										}}
-										onClick={() => openPreviewDialog(image)}
-											/>
+											{imageErrors.has(image.id) ? (
+												<Box
+													sx={{
+														height: '120px',
+														width: '100%',
+														display: 'flex',
+														alignItems: 'center',
+														justifyContent: 'center',
+														backgroundColor: '#f5f5f5',
+														color: '#999',
+														cursor: 'pointer'
+													}}
+													onClick={() => openPreviewDialog(image)}
+												>
+													<Typography variant='body2'>图片无法加载</Typography>
+												</Box>
+											) : (
+												<CardMedia
+													component='img'
+													image={image.url}
+													alt={image.title}
+													sx={{
+														height: '120px',
+														maxHeight: '120px',
+														width: '100%',
+														objectFit: 'cover',
+														cursor: 'pointer'
+													}}
+													onClick={() => openPreviewDialog(image)}
+													onError={() => handleImageError(image.id)}
+												/>
+											)}
 											<CardContent sx={{ flexGrow: 1 }}>
 												<Typography variant='h6' noWrap title={image.title}>
-													{image.title}
-												</Typography>
+												{removeFileExtension(image.title)}
+											</Typography>
 												<Typography variant='body2' color='text.secondary'>
 													上传者: {image.user.username}
 												</Typography>
@@ -411,8 +466,8 @@ const Review: React.FC = () => {
 									/>
 											<CardContent sx={{ flexGrow: 1 }}>
 												<Typography variant='h6' noWrap title={image.title}>
-													{image.title}
-												</Typography>
+												{removeFileExtension(image.title)}
+											</Typography>
 												<Typography variant='body2' color='text.secondary'>
 													上传者: {image.user.username}
 												</Typography>
@@ -474,8 +529,8 @@ const Review: React.FC = () => {
 									/>
 											<CardContent sx={{ flexGrow: 1 }}>
 												<Typography variant='h6' noWrap title={image.title}>
-													{image.title}
-												</Typography>
+												{removeFileExtension(image.title)}
+											</Typography>
 												<Typography variant='body2' color='text.secondary'>
 													上传者: {image.user.username}
 												</Typography>
@@ -622,7 +677,7 @@ const Review: React.FC = () => {
 									}}
 								/>
 								</Box>
-								<Typography variant='h6'>{selectedImage.title}</Typography>
+								<Typography variant='h6'>{removeFileExtension(selectedImage.title)}</Typography>
 								<Typography variant='body2' color='text.secondary'>
 									上传者: {selectedImage.user.username} (
 									{selectedImage.user.email})
