@@ -6,9 +6,10 @@ import { User } from '../../entities/User';
 import { ReviewController } from './review.controller';
 import { ReviewService } from './review.service';
 import { CosService } from '../../services/cos.service';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
-	imports: [TypeOrmModule.forFeature([PendingImage, Image, User])],
+	imports: [TypeOrmModule.forFeature([PendingImage, Image, User]), NotificationModule],
 	controllers: [ReviewController],
 	providers: [ReviewService, CosService],
 	exports: [ReviewService],

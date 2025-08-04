@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { PendingImage } from '../../entities/PendingImage';
 import { Image } from '../../entities/Image';
 import { CosService } from '../../services/cos.service';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class ReviewService {
@@ -13,6 +14,7 @@ export class ReviewService {
     @InjectRepository(Image)
     private imageRepository: Repository<Image>,
     private cosService: CosService,
+    private notificationService: NotificationService,
   ) {}
 
   // 获取待审核图片列表
@@ -105,6 +107,12 @@ export class ReviewService {
     pendingImage.status = 'approved';
     await this.pendingImageRepository.save(pendingImage);
 
+    // 发送审核通过通知
+    await this.notificationService.createReviewApprovedNotification(
+      pendingImage.userId,
+      pendingImage.title,
+    );
+
     return image;
   }
 
@@ -126,6 +134,13 @@ export class ReviewService {
     pendingImage.status = 'rejected';
     pendingImage.rejectReason = reason || '不符合审核标准';
     await this.pendingImageRepository.save(pendingImage);
+
+    // 发送审核拒绝通知
+    await this.notificationService.createReviewRejectedNotification(
+      pendingImage.userId,
+      pendingImage.title,
+      pendingImage.rejectReason,
+    );
 
     // 可选：删除COS上的文件
     if (this.cosService.isCOSConfigured()) {

@@ -11,6 +11,7 @@ import { Video } from './entities/Video';
 import { Work } from './entities/Work';
 import { SiteStats } from './entities/SiteStats';
 import { PendingImage } from './entities/PendingImage';
+import { Notification } from './entities/Notification';
 
 // Modules
 import { AuthModule } from './modules/auth/auth.module';
@@ -20,6 +21,7 @@ import { ReviewModule } from './modules/review/review.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { VideosModule } from './modules/videos/videos.module';
 import { WorksModule } from './modules/works/works.module';
+import { NotificationModule } from './modules/notification/notification.module';
 import * as path from 'path';
 
 @Module({
@@ -40,7 +42,7 @@ import * as path from 'path';
 				username: configService.get('DB_USER', 'root'),
 				password: configService.get('DB_PASSWORD', ''),
 				database: configService.get('DB_NAME', 'katou_megumi_fan_site'),
-				entities: [User, Image, Video, Work, SiteStats, PendingImage],
+				entities: [User, Image, Video, Work, SiteStats, PendingImage, Notification],
 				synchronize: true, // 开发环境自动同步表结构
 				logging: false,
 			}),
@@ -66,6 +68,7 @@ import * as path from 'path';
 		AdminModule,
 		VideosModule,
 		WorksModule,
+		NotificationModule,
 	],
 })
 export class AppModule {}

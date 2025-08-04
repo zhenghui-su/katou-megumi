@@ -94,7 +94,20 @@ export class CosService {
     const ext = path.extname(originalFilename);
     const baseName = path.basename(originalFilename, ext);
     
+    // 对中文文件名进行安全处理
+    const safeBaseName = this.sanitizeFileName(baseName);
+    
     // 按分类生成路径
-    return `images/${category}/${timestamp}_${randomStr}_${baseName}${ext}`;
+    return `images/${category}/${timestamp}_${randomStr}_${safeBaseName}${ext}`;
+  }
+
+  // 文件名安全处理，支持中文
+  private sanitizeFileName(fileName: string): string {
+    // 移除或替换不安全的字符，但保留中文字符
+    return fileName
+      .replace(/[<>:"/\\|?*]/g, '_') // 替换Windows不支持的字符
+      .replace(/\s+/g, '_') // 替换空格为下划线
+      .replace(/\.+/g, '.') // 多个点替换为单个点
+      .substring(0, 100); // 限制长度
   }
 }
