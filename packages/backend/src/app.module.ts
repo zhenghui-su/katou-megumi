@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
@@ -20,48 +20,52 @@ import { ReviewModule } from './modules/review/review.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { VideosModule } from './modules/videos/videos.module';
 import { WorksModule } from './modules/works/works.module';
+import * as path from 'path';
 
 @Module({
-  imports: [
-    // 配置模块
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
-    }),
-    
-    // 数据库模块
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '3306'),
-      username: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'katou_megumi_fan_site',
-      entities: [User, Image, Video, Work, SiteStats, PendingImage],
-      synchronize: true, // 开发环境自动同步表结构
-      logging: false,
-    }),
-    
-    // 静态文件服务
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),
-      serveRoot: '/public',
-    }),
-    
-    // 临时文件服务
-    ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'temp'),
-      serveRoot: '/temp',
-    }),
-    
-    // 业务模块
-    AuthModule,
-    GalleryModule,
-    UploadModule,
-    ReviewModule,
-    AdminModule,
-    VideosModule,
-    WorksModule,
-  ],
+	imports: [
+		// 配置模块
+		ConfigModule.forRoot({
+			isGlobal: true,
+			envFilePath: path.resolve(__dirname, '.env'),
+		}),
+
+		// 数据库模块
+		TypeOrmModule.forRootAsync({
+			inject: [ConfigService],
+			useFactory: (configService: ConfigService) => ({
+				type: 'mysql',
+				host: configService.get('DB_HOST', 'localhost'),
+				port: configService.get('DB_PORT', 3306),
+				username: configService.get('DB_USER', 'root'),
+				password: configService.get('DB_PASSWORD', ''),
+				database: configService.get('DB_NAME', 'katou_megumi_fan_site'),
+				entities: [User, Image, Video, Work, SiteStats, PendingImage],
+				synchronize: true, // 开发环境自动同步表结构
+				logging: false,
+			}),
+		}),
+
+		// 静态文件服务
+		ServeStaticModule.forRoot({
+			rootPath: join(__dirname, '..', 'public'),
+			serveRoot: '/public',
+		}),
+
+		// 临时文件服务
+		ServeStaticModule.forRoot({
+			rootPath: join(process.cwd(), 'temp'),
+			serveRoot: '/temp',
+		}),
+
+		// 业务模块
+		AuthModule,
+		GalleryModule,
+		UploadModule,
+		ReviewModule,
+		AdminModule,
+		VideosModule,
+		WorksModule,
+	],
 })
 export class AppModule {}
