@@ -1,4 +1,3 @@
-import { MusicPlayer } from '@katou-megumi/shared';
 import {
 	ArrowForward,
 	Brush,
@@ -1078,9 +1077,6 @@ const Home: React.FC = () => {
 					</Box>
 				</motion.div>
 			</Container>
-
-			{/* 音乐播放器 */}
-			<MusicPlayer />
 		</Box>
 	);
 };
