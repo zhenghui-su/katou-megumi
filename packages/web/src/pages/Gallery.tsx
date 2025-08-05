@@ -44,7 +44,7 @@ interface GalleryImage {
 }
 
 const Gallery: React.FC = () => {
-	const { isAuthenticated, token } = useAuth();
+	const { isAuthenticated, token, user } = useAuth();
 	const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 	const [message, setMessage] = useState<{
 		type: 'success' | 'error' | 'info';
@@ -223,8 +223,8 @@ const Gallery: React.FC = () => {
 				</Typography>
 			</Box>
 
-			{/* 浮动上传按钮 */}
-			{isAuthenticated && (
+			{/* 浮动上传按钮 - 只对版主和管理员显示 */}
+			{isAuthenticated && (user?.role === 'admin' || user?.role === 'moderator') && (
 				<Fab
 					color='primary'
 					aria-label='upload'

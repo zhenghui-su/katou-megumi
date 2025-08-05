@@ -22,6 +22,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { VideosModule } from './modules/videos/videos.module';
 import { WorksModule } from './modules/works/works.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { UsersModule } from './modules/users/users.module';
 import * as path from 'path';
 
 @Module({
@@ -69,6 +70,7 @@ import * as path from 'path';
 		VideosModule,
 		WorksModule,
 		NotificationModule,
+		UsersModule,
 	],
 })
 export class AppModule {}
