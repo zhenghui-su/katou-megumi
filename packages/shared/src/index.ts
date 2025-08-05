@@ -13,11 +13,19 @@ export interface Track {
   artist: string;
   src: string;
   duration: number;
+  cover?: string;
+  category?: string;
+  description?: string;
 }
 
 export interface MusicPlayerProps {
-  tracks?: Track[];
+  tracks: Track[];
   autoPlay?: boolean;
+  onTrackPlay?: (trackId: number) => void;
+  onTrackChange?: (track: Track) => void;
+  loading?: boolean;
+  empty?: boolean;
+  emptyMessage?: string;
 }
 
 export interface LanguageSwitcherProps {

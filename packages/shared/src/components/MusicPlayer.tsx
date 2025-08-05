@@ -30,13 +30,19 @@ interface Track {
 	src: string;
 	duration: number;
 	cover?: string;
+	category?: string;
+	description?: string;
 }
 
 interface MusicPlayerProps {
 	tracks?: Track[];
 	autoPlay?: boolean;
+	onTrackPlay?: (trackId: number) => void; // 播放回调，用于统计播放次数
+	onTrackChange?: (track: Track) => void; // 切换歌曲回调
+	empty?: boolean; // 是否为空状态
 }
 
+// 默认音乐数据
 const defaultTracks: Track[] = [
 	{
 		id: 1,
@@ -44,14 +50,18 @@ const defaultTracks: Track[] = [
 		artist: '路人女主的养成方法 加藤惠角色歌',
 		src: 'https://chen-1320883525.cos.ap-chengdu.myqcloud.com/music/%E8%B7%AF%E4%BA%BA%E5%A5%B3%E4%B8%BB%E7%9A%84%E5%85%BB%E6%88%90%E6%96%B9%E6%B3%95%20%E8%A7%92%E8%89%B2%E6%AD%8C%28%E5%8A%A0%E8%97%A4%E6%81%B5_CV_%E5%AE%89%E9%87%8E%E5%B8%8C%E4%B8%96%E4%B9%83%29.mp4',
 		duration: 180,
-		cover:
-			'https://chen-1320883525.cos.ap-chengdu.myqcloud.com/KatouMegumi/%E8%A7%92%E8%89%B2%E6%AD%8C%E5%B0%81%E9%9D%A2.jpg',
+		cover: 'https://chen-1320883525.cos.ap-chengdu.myqcloud.com/KatouMegumi/%E8%A7%92%E8%89%B2%E6%AD%8C%E5%B0%81%E9%9D%A2.jpg',
 	},
 ];
 
 const MusicPlayer: React.FC<MusicPlayerProps> = ({
 	tracks = defaultTracks,
+	onTrackPlay,
+	onTrackChange,
+	empty = false,
 }) => {
+	// 使用传入的 tracks 或默认数据
+	const safeTracks = tracks && tracks.length > 0 ? tracks : defaultTracks;
 	const { t } = useTranslation();
 	const audioRef = useRef<HTMLAudioElement>(null);
 	const [isPlaying, setIsPlaying] = useState(false);
@@ -63,30 +73,51 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
 	const [showPlaylist, setShowPlaylist] = useState(false);
 	const [isMinimized, setIsMinimized] = useState(true);
 
+	// 当 tracks 变化时重置当前播放索引
+	useEffect(() => {
+		if (safeTracks.length === 0) {
+			setCurrentTrack(0);
+			setIsPlaying(false);
+		} else if (currentTrack >= safeTracks.length) {
+			setCurrentTrack(0);
+		}
+	}, [safeTracks, currentTrack]);
+
+	// 移除自动播放功能，让用户自己决定是否播放
+
 	useEffect(() => {
 		const audio = audioRef.current;
-		if (!audio) return;
+		if (!audio || safeTracks.length === 0) return;
 
 		const updateTime = () => setCurrentTime(audio.currentTime);
 		const updateDuration = () => setDuration(audio.duration);
 		const handleEnded = () => {
-			if (currentTrack < tracks.length - 1) {
+			if (currentTrack < safeTracks.length - 1) {
 				setCurrentTrack(currentTrack + 1);
 			} else {
 				setIsPlaying(false);
 			}
 		};
 
+		// 当开始播放时，调用播放回调
+		const handlePlay = () => {
+			if (safeTracks[currentTrack] && onTrackPlay) {
+				onTrackPlay(safeTracks[currentTrack].id);
+			}
+		};
+
 		audio.addEventListener('timeupdate', updateTime);
 		audio.addEventListener('loadedmetadata', updateDuration);
 		audio.addEventListener('ended', handleEnded);
+		audio.addEventListener('play', handlePlay);
 
 		return () => {
 			audio.removeEventListener('timeupdate', updateTime);
 			audio.removeEventListener('loadedmetadata', updateDuration);
 			audio.removeEventListener('ended', handleEnded);
+			audio.removeEventListener('play', handlePlay);
 		};
-	}, [currentTrack, tracks.length]);
+	}, [currentTrack, safeTracks, onTrackPlay]);
 
 	useEffect(() => {
 		const audio = audioRef.current;
@@ -111,11 +142,19 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
 	};
 
 	const previousTrack = () => {
-		setCurrentTrack(currentTrack > 0 ? currentTrack - 1 : tracks.length - 1);
+		const newIndex = currentTrack > 0 ? currentTrack - 1 : safeTracks.length - 1;
+		setCurrentTrack(newIndex);
+		if (onTrackChange && safeTracks[newIndex]) {
+			onTrackChange(safeTracks[newIndex]);
+		}
 	};
 
 	const nextTrack = () => {
-		setCurrentTrack(currentTrack < tracks.length - 1 ? currentTrack + 1 : 0);
+		const newIndex = currentTrack < safeTracks.length - 1 ? currentTrack + 1 : 0;
+		setCurrentTrack(newIndex);
+		if (onTrackChange && safeTracks[newIndex]) {
+			onTrackChange(safeTracks[newIndex]);
+		}
 	};
 
 	const handleSeek = (value: number) => {
@@ -139,11 +178,17 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
 	const selectTrack = (index: number) => {
 		setCurrentTrack(index);
 		setShowPlaylist(false);
+		if (onTrackChange && safeTracks[index]) {
+			onTrackChange(safeTracks[index]);
+		}
 	};
 
-	if (!tracks.length) return null;
+	// 空状态或无音乐数据
+	if (empty || !safeTracks.length) {
+		return null;
+	}
 
-	const track = tracks[currentTrack];
+	const track = safeTracks[currentTrack];
 
 	return (
 		<>
@@ -511,7 +556,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
 					<Collapse in={showPlaylist}>
 						<Box sx={{ borderTop: 1, borderColor: 'divider' }}>
 							<List dense sx={{ maxHeight: 200, overflow: 'auto' }}>
-								{tracks.map((track, index) => (
+						{safeTracks.map((track, index) => (
 									<ListItem
 										key={track.id}
 										component='div'
