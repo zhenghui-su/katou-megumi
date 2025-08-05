@@ -8,7 +8,6 @@ import {
 	CardMedia,
 	CardContent,
 	Button,
-	Paper,
 	Alert,
 	Fab,
 	Dialog,
@@ -17,7 +16,7 @@ import {
 	DialogActions,
 	IconButton,
 } from '@mui/material';
-import { Add, Close, Download, ZoomIn } from '@mui/icons-material';
+import { Add, Close, Download } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { FileUpload } from '@katou-megumi/shared';
@@ -218,8 +217,6 @@ const Gallery: React.FC = () => {
 				</Alert>
 			)}
 
-
-
 			<Box sx={{ mt: 6, textAlign: 'center' }}>
 				<Typography variant='body1' color='text.secondary'>
 					更多精美图片正在整理中，敬请期待...
@@ -339,10 +336,7 @@ const Gallery: React.FC = () => {
 					}}
 				>
 					<Typography variant='h6'>上传图片</Typography>
-					<IconButton
-						onClick={() => setUploadDialogOpen(false)}
-						size='small'
-					>
+					<IconButton onClick={() => setUploadDialogOpen(false)} size='small'>
 						<Close />
 					</IconButton>
 				</DialogTitle>
