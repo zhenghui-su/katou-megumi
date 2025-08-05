@@ -88,7 +88,56 @@ export const reviewAPI = {
 };
 
 export const notificationAPI = {
-  // 创建系统通知
+  // 发送系统通知
   createSystemNotification: (data: { title: string; content: string }) =>
     api.post('/notifications/system', data),
+};
+
+export const userAPI = {
+  // 获取用户列表
+  getUsers: (params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+    role?: string;
+  }) => api.get('/users', { params }),
+
+  // 获取用户详情
+  getUserById: (id: string) => api.get(`/users/${id}`),
+
+  // 创建用户
+  createUser: (data: {
+    username: string;
+    email: string;
+    nickname: string;
+    password: string;
+    role: 'admin' | 'user' | 'moderator';
+    status: 'active' | 'inactive' | 'banned';
+  }) => api.post('/users', data),
+
+  // 更新用户
+  updateUser: (id: string, data: {
+    username?: string;
+    email?: string;
+    nickname?: string;
+    role?: 'admin' | 'user' | 'moderator';
+    status?: 'active' | 'inactive' | 'banned';
+  }) => api.put(`/users/${id}`, data),
+
+  // 删除用户
+  deleteUser: (id: string) => api.delete(`/users/${id}`),
+
+  // 重置用户密码
+  resetPassword: (id: string, data: { password: string }) =>
+    api.post(`/users/${id}/reset-password`, data),
+
+  // 批量操作用户
+  batchUpdateUsers: (data: {
+    userIds: string[];
+    action: 'activate' | 'deactivate' | 'ban' | 'delete';
+  }) => api.post('/users/batch', data),
+
+  // 获取用户统计信息
+  getUserStats: () => api.get('/users/stats'),
 };
