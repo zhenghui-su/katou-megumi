@@ -224,9 +224,15 @@ const Review: React.FC = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
       {/* 顶部导航栏 */}
-      <AppBar position="static" sx={{ backgroundColor: '#ff6b9d' }}>
+      <AppBar 
+        position="static" 
+        sx={{ 
+          background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+        }}
+      >
         <Toolbar>
           <IconButton
             color="inherit"
@@ -257,7 +263,14 @@ const Review: React.FC = () => {
         )}
 
         {/* 状态选项卡 */}
-        <Paper sx={{ mb: 3 }}>
+        <Paper 
+          sx={{ 
+            mb: 4,
+            borderRadius: 3,
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+            border: '1px solid #e2e8f0',
+          }}
+        >
           <Tabs
             value={tabValue}
             onChange={(_e, newValue) => {
@@ -273,7 +286,15 @@ const Review: React.FC = () => {
         </Paper>
 
         {/* 类别筛选器 */}
-        <Paper sx={{ p: 2, mb: 3 }}>
+        <Paper 
+          sx={{ 
+            p: 4, 
+            mb: 4,
+            borderRadius: 3,
+            boxShadow: '0 8px 20px rgba(0, 0, 0, 0.08)',
+            border: '1px solid #e2e8f0',
+          }}
+        >
           <FormControl sx={{ minWidth: 200 }}>
             <InputLabel>按类别筛选</InputLabel>
             <Select
@@ -326,10 +347,13 @@ const Review: React.FC = () => {
                       height: '100%',
                       display: 'flex',
                       flexDirection: 'column',
+                      borderRadius: 3,
+                      boxShadow: '0 8px 20px rgba(0, 0, 0, 0.08)',
+                      border: '1px solid #e2e8f0',
                       transition: 'all 0.3s ease',
                       '&:hover': {
                         transform: 'translateY(-5px)',
-                        boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+                        boxShadow: '0 12px 30px rgba(0, 0, 0, 0.12)',
                       },
                     }}
                   >
@@ -382,16 +406,33 @@ const Review: React.FC = () => {
                           <Button
                             size="small"
                             startIcon={<CheckCircle />}
-                            color="success"
                             onClick={() => openReviewDialog(image, 'approve')}
+                            sx={{
+                              background: 'linear-gradient(135deg, #10b981, #059669)',
+                              color: 'white',
+                              boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
+                              '&:hover': {
+                                background: 'linear-gradient(135deg, #059669, #047857)',
+                                boxShadow: '0 6px 20px rgba(16, 185, 129, 0.6)',
+                                transform: 'translateY(-1px)',
+                              },
+                            }}
                           >
                             通过
                           </Button>
                           <Button
                             size="small"
                             startIcon={<Cancel />}
-                            color="error"
                             onClick={() => openReviewDialog(image, 'reject')}
+                            sx={{
+                              borderColor: '#ef4444',
+                              color: '#ef4444',
+                              '&:hover': {
+                                borderColor: '#dc2626',
+                                backgroundColor: 'rgba(239, 68, 68, 0.04)',
+                                transform: 'translateY(-1px)',
+                              },
+                            }}
                           >
                             拒绝
                           </Button>
@@ -438,6 +479,14 @@ const Review: React.FC = () => {
                       height: '100%',
                       display: 'flex',
                       flexDirection: 'column',
+                      borderRadius: 3,
+                      boxShadow: '0 8px 20px rgba(0, 0, 0, 0.08)',
+                      border: '1px solid #e2e8f0',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 12px 30px rgba(0, 0, 0, 0.12)',
+                      },
                     }}
                   >
                     <CardMedia

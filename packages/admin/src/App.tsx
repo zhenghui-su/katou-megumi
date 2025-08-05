@@ -9,15 +9,85 @@ import SystemNotification from './pages/SystemNotification';
 
 const theme = createTheme({
   palette: {
+    mode: 'light',
     primary: {
-      main: '#ff6b9d',
+      main: '#6366f1',
+      light: '#818cf8',
+      dark: '#4f46e5',
     },
     secondary: {
-      main: '#667eea',
+      main: '#ec4899',
+      light: '#f472b6',
+      dark: '#db2777',
+    },
+    background: {
+      default: '#f8fafc',
+      paper: '#ffffff',
+    },
+    text: {
+      primary: '#1e293b',
+      secondary: '#64748b',
     },
   },
   typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontWeight: 700,
+      fontSize: '2.5rem',
+    },
+    h2: {
+      fontWeight: 600,
+      fontSize: '2rem',
+    },
+    h3: {
+      fontWeight: 600,
+      fontSize: '1.75rem',
+    },
+    h4: {
+      fontWeight: 600,
+      fontSize: '1.5rem',
+    },
+    h5: {
+      fontWeight: 600,
+      fontSize: '1.25rem',
+    },
+    h6: {
+      fontWeight: 600,
+      fontSize: '1.125rem',
+    },
+  },
+  shape: {
+    borderRadius: 12,
+  },
+  components: {
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+          border: '1px solid #e2e8f0',
+          '&:hover': {
+            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+          },
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+          fontWeight: 500,
+          borderRadius: 8,
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+          border: '1px solid #e2e8f0',
+        },
+      },
+    },
   },
 });
 

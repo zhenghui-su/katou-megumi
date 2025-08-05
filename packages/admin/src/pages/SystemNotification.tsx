@@ -62,9 +62,15 @@ const SystemNotification: React.FC = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
       {/* 顶部导航栏 */}
-      <AppBar position="static" sx={{ backgroundColor: '#ff6b9d' }}>
+      <AppBar 
+        position="static" 
+        sx={{ 
+          background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+        }}
+      >
         <Toolbar>
           <IconButton
             color="inherit"
@@ -105,22 +111,39 @@ const SystemNotification: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <Card>
-                <CardContent>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      mb: 3,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                    }}
-                  >
-                    <Send color="primary" />
-                    发送系统通知
-                  </Typography>
+              <Card 
+                sx={{ 
+                  borderRadius: 3,
+                  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+                  border: '1px solid #e2e8f0',
+                }}
+              >
+                <CardContent sx={{ p: 5 }}>
+                  <Box sx={{ textAlign: 'center', mb: 5 }}>
+                    <Box
+                      sx={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto 24px',
+                        boxShadow: '0 10px 25px rgba(99, 102, 241, 0.3)',
+                      }}
+                    >
+                      <Send sx={{ fontSize: 40, color: 'white' }} />
+                    </Box>
+                    <Typography variant="h4" component="h1" sx={{ mb: 2, fontWeight: 700 }}>
+                      发送系统通知
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
+                      向所有用户发送重要的系统通知
+                    </Typography>
+                  </Box>
 
-                  <Box component="form" onSubmit={handleSubmit}>
+                  <Box component="form" onSubmit={handleSubmit} sx={{ mt: 4 }}>
                     <TextField
                       fullWidth
                       label="通知标题"
@@ -128,6 +151,15 @@ const SystemNotification: React.FC = () => {
                       onChange={(e) => setTitle(e.target.value)}
                       margin="normal"
                       required
+                      autoFocus
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                          '&:hover fieldset': {
+                            borderColor: 'primary.main',
+                          },
+                        },
+                      }}
                     />
                     <TextField
                       fullWidth
@@ -135,17 +167,40 @@ const SystemNotification: React.FC = () => {
                       value={content}
                       onChange={(e) => setContent(e.target.value)}
                       multiline
-                      rows={6}
+                      rows={5}
                       margin="normal"
                       required
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                          '&:hover fieldset': {
+                            borderColor: 'primary.main',
+                          },
+                        },
+                      }}
                     />
                     <Button
                       type="submit"
+                      fullWidth
                       variant="contained"
-                      color="primary"
                       disabled={loading}
                       startIcon={<Send />}
-                      sx={{ mt: 2 }}
+                      sx={{ 
+                        mt: 4, 
+                        py: 1.8,
+                        fontSize: '1.1rem',
+                        fontWeight: 600,
+                        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                        boxShadow: '0 4px 15px rgba(99, 102, 241, 0.4)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                          boxShadow: '0 6px 20px rgba(99, 102, 241, 0.6)',
+                          transform: 'translateY(-1px)',
+                        },
+                        '&:disabled': {
+                          background: 'linear-gradient(135deg, #94a3b8, #cbd5e1)',
+                        },
+                      }}
                     >
                       {loading ? '发送中...' : '发送通知'}
                     </Button>

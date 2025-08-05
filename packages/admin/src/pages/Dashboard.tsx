@@ -126,26 +126,26 @@ const Dashboard: React.FC = () => {
     {
       title: '用户总数',
       value: stats.totalUsers,
-      icon: <Person sx={{ fontSize: 40, color: '#3f51b5' }} />,
-      color: '#e8eaf6',
+      icon: <Person sx={{ fontSize: 32, color: 'white' }} />,
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     },
     {
       title: '图片总数',
       value: stats.totalImages,
-      icon: <Image sx={{ fontSize: 40, color: '#f50057' }} />,
-      color: '#fce4ec',
+      icon: <Image sx={{ fontSize: 32, color: 'white' }} />,
+      background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
     },
     {
       title: '视频总数',
       value: stats.totalVideos,
-      icon: <VideoLibrary sx={{ fontSize: 40, color: '#ff9800' }} />,
-      color: '#fff3e0',
+      icon: <VideoLibrary sx={{ fontSize: 32, color: 'white' }} />,
+      background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
     },
     {
       title: '总浏览量',
       value: stats.totalViews,
-      icon: <Visibility sx={{ fontSize: 40, color: '#4caf50' }} />,
-      color: '#e8f5e9',
+      icon: <Visibility sx={{ fontSize: 32, color: 'white' }} />,
+      background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
     },
   ];
 
@@ -180,7 +180,14 @@ const Dashboard: React.FC = () => {
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
       {/* 顶部导航栏 */}
-      <AppBar position="static" sx={{ backgroundColor: '#ff6b9d' }}>
+      <AppBar 
+        position="static" 
+        sx={{ 
+          backgroundColor: '#ff6b9d',
+          background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+        }}
+      >
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             后台管理系统
@@ -215,11 +222,18 @@ const Dashboard: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <Paper sx={{ p: 3, mb: 4 }}>
-            <Typography variant="h4" component="h1" sx={{ mb: 1 }}>
-              欢迎回来，{user?.username || '管理员'}
+          <Paper 
+            sx={{ 
+              p: 4, 
+              mb: 4,
+              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
+              borderRadius: 3,
+            }}
+          >
+            <Typography variant="h4" component="h1" sx={{ mb: 2, fontWeight: 700, color: 'text.primary' }}>
+              欢迎回来，{user?.username || '管理员'} 👋
             </Typography>
-            <Typography variant="body1" color="text.secondary">
+            <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
               这里是系统仪表盘，您可以查看网站的各项统计数据和管理功能。
             </Typography>
           </Paper>
@@ -237,35 +251,70 @@ const Dashboard: React.FC = () => {
                 <Card
                   sx={{
                     height: '100%',
-                    backgroundColor: card.color,
-                    transition: 'all 0.3s ease',
+                    background: card.background,
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    overflow: 'hidden',
                     '&:hover': {
-                      transform: 'translateY(-5px)',
-                      boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+                      transform: 'translateY(-8px) scale(1.02)',
+                      boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+                    },
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
+                      pointerEvents: 'none',
                     },
                   }}
                 >
-                  <CardContent>
+                  <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
                     <Box
                       sx={{
                         display: 'flex',
                         justifyContent: 'space-between',
-                        alignItems: 'center',
+                        alignItems: 'flex-start',
+                        mb: 2,
                       }}
                     >
-                      <Box>
+                      <Box sx={{ flex: 1 }}>
                         <Typography
                           variant="h3"
                           component="div"
-                          sx={{ fontWeight: 'bold', mb: 1 }}
+                          sx={{ 
+                            fontWeight: 800, 
+                            mb: 1,
+                            color: 'white',
+                            textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                          }}
                         >
                           {card?.value?.toLocaleString() || '0'}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography 
+                          variant="body1" 
+                          sx={{ 
+                            color: 'rgba(255,255,255,0.9)',
+                            fontWeight: 500,
+                            fontSize: '1rem',
+                          }}
+                        >
                           {card.title}
                         </Typography>
                       </Box>
-                      {card.icon}
+                      <Box
+                        sx={{
+                          p: 1.5,
+                          borderRadius: '50%',
+                          backgroundColor: 'rgba(255,255,255,0.2)',
+                          backdropFilter: 'blur(10px)',
+                        }}
+                      >
+                        {card.icon}
+                      </Box>
                     </Box>
                   </CardContent>
                 </Card>
