@@ -1,11 +1,11 @@
 import { Controller, Get, Post, Param, Query, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ReviewService } from './review.service';
+import { AdminGuard } from '../../guards/admin.guard';
 
 @ApiTags('审核管理')
 @Controller('review')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AdminGuard)
 @ApiBearerAuth()
 export class ReviewController {
   constructor(private reviewService: ReviewService) {}

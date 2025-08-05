@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PendingImage } from '../../entities/PendingImage';
 import { User } from '../../entities/User';
+import { Music } from '../../entities/Music';
 import { CosService } from '../../services/cos.service';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -26,6 +27,8 @@ export class UploadService {
 		private pendingImageRepository: Repository<PendingImage>,
 		@InjectRepository(User)
 		private userRepository: Repository<User>,
+		@InjectRepository(Music)
+		private musicRepository: Repository<Music>,
 		private cosService: CosService
 	) {}
 
@@ -206,5 +209,125 @@ export class UploadService {
 			size: file.size,
 			mimeType: file.mimetype,
 		};
+	}
+
+	// 音乐文件上传
+	async uploadMusicFile(
+		file: Express.Multer.File,
+		userId: number,
+		metadata: {
+			title: string;
+			artist: string;
+			category: string;
+			description?: string;
+			cover?: string;
+		}
+	) {
+		// 验证文件类型
+		const allowedMimeTypes = [
+			'audio/mpeg',
+			'audio/mp3',
+			'audio/wav',
+			'audio/ogg',
+			'audio/m4a',
+			'video/mp4',
+		];
+		if (!allowedMimeTypes.includes(file.mimetype)) {
+			throw new BadRequestException('不支持的音乐文件格式');
+		}
+
+		if (!this.cosService.isCOSConfigured()) {
+			throw new BadRequestException('COS服务未配置，请联系管理员');
+		}
+
+		// 生成唯一文件名
+		const fileName = this.cosService.generateFileName(
+			file.originalname,
+			'music'
+		);
+
+		try {
+			// 上传到COS
+			const fileUrl = await this.cosService.uploadToCOS(
+				file.buffer,
+				fileName,
+				file.mimetype
+			);
+
+			// 获取音频时长（简单估算，实际项目中可能需要使用专门的库）
+			const duration = this.estimateAudioDuration(file.size, file.mimetype);
+
+			// 保存到数据库
+			const music = this.musicRepository.create({
+				title: metadata.title,
+				artist: metadata.artist,
+				src: fileUrl,
+				duration,
+				category: metadata.category,
+				description: metadata.description,
+				cover: metadata.cover,
+			});
+
+			const savedMusic = await this.musicRepository.save(music);
+
+			return {
+				id: savedMusic.id,
+				title: savedMusic.title,
+				artist: savedMusic.artist,
+				src: savedMusic.src,
+				duration: savedMusic.duration,
+				category: savedMusic.category,
+				description: savedMusic.description,
+				cover: savedMusic.cover,
+				url: fileUrl,
+				filename: file.originalname,
+				size: file.size,
+				mimetype: file.mimetype,
+			};
+		} catch (error: any) {
+			throw new BadRequestException(`音乐文件上传失败: ${error.message}`);
+		}
+	}
+
+	// 简单估算音频时长（基于文件大小和比特率）
+	private estimateAudioDuration(fileSize: number, mimetype: string): number {
+		// 这是一个简单的估算，实际项目中建议使用 ffprobe 或其他专业工具
+		let estimatedBitrate = 128; // kbps
+
+		if (mimetype.includes('wav')) {
+			estimatedBitrate = 1411; // CD质量WAV
+		} else if (mimetype.includes('m4a')) {
+			estimatedBitrate = 256;
+		}
+
+		// 计算时长（秒）= 文件大小(字节) * 8 / 比特率(kbps) / 1000
+		const durationInSeconds = Math.round(
+			(fileSize * 8) / (estimatedBitrate * 1000)
+		);
+		return Math.max(durationInSeconds, 1); // 至少1秒
+	}
+
+	// 删除COS文件
+	async deleteFile(fileUrl: string, userId: number) {
+		if (!this.cosService.isCOSConfigured()) {
+			throw new BadRequestException('COS服务未配置，请联系管理员');
+		}
+
+		try {
+			// 从URL中提取文件名
+			const urlParts = fileUrl.split('/');
+			const fileName = urlParts.slice(-3).join('/'); // 获取 images/category/filename 部分
+
+			// 删除COS文件
+			await this.cosService.deleteFromCOS(fileName);
+
+			return {
+				url: fileUrl,
+				fileName: fileName,
+				message: '文件删除成功',
+			};
+		} catch (error: any) {
+			throw new BadRequestException(`文件删除失败: ${error.message}`);
+		}
 	}
 }
