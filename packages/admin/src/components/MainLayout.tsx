@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Layout,
   Menu,
@@ -24,6 +24,7 @@ import {
   PictureOutlined,
   VideoCameraOutlined,
   AuditOutlined,
+  SoundOutlined,
 } from '@ant-design/icons';
 import {
   Routes,
@@ -34,6 +35,9 @@ import {
 } from 'react-router-dom';
 import Dashboard from '../pages/Dashboard';
 import Review from '../pages/Review';
+import MusicManagement from '../pages/MusicManagement';
+import ImageManagement from '../pages/ImageManagement';
+import VideoManagement from '../pages/VideoManagement';
 import { notificationAPI } from '../utils/api';
 
 const { Header, Sider, Content } = Layout;
@@ -78,6 +82,12 @@ const menuItems: MenuItem[] = [
         label: '视频管理',
         path: '/admin/videos',
       },
+      {
+        key: 'music',
+        icon: <SoundOutlined />,
+        label: '音乐管理',
+        path: '/admin/music',
+      },
     ],
   },
 ];
@@ -94,9 +104,50 @@ const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
   const [notificationLoading, setNotificationLoading] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [notificationForm] = Form.useForm();
+  const [openMenuKeys, setOpenMenuKeys] = useState<string[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // 更新当前时间
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // 根据路由变化自动设置展开的菜单
+  useEffect(() => {
+    const autoOpenKeys = getOpenKeys(menuItems, location.pathname);
+    setOpenMenuKeys(autoOpenKeys);
+  }, [location.pathname]);
+
+  // 格式化当前时间显示
+  const formatCurrentTime = () => {
+    const weekdays = [
+      '星期日',
+      '星期一',
+      '星期二',
+      '星期三',
+      '星期四',
+      '星期五',
+      '星期六',
+    ];
+    const weekday = weekdays[currentTime.getDay()];
+    const timeStr = currentTime.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+    return `${timeStr} ${weekday}`;
+  };
 
   // 获取当前选中的菜单项
   const findSelectedKey = (items: MenuItem[], pathname: string): string => {
@@ -113,6 +164,20 @@ const MainLayout: React.FC = () => {
   };
 
   const selectedKey = findSelectedKey(menuItems, location.pathname);
+
+  // 获取应该展开的父菜单keys
+  const getOpenKeys = (items: MenuItem[], pathname: string): string[] => {
+    for (const item of items) {
+      if (item.children) {
+        for (const child of item.children) {
+          if (child.path === pathname) {
+            return [item.key];
+          }
+        }
+      }
+    }
+    return [];
+  };
 
   const findMenuItemByKey = (
     items: MenuItem[],
@@ -229,27 +294,47 @@ const MainLayout: React.FC = () => {
             theme="dark"
             mode="inline"
             selectedKeys={[selectedKey]}
+            openKeys={openMenuKeys}
+            onOpenChange={setOpenMenuKeys}
             style={{
               background: 'transparent',
               border: 'none',
+              padding: '0 8px',
             }}
             onClick={({ key }) => handleMenuClick(key)}
-            items={menuItems.map((item) => ({
-              key: item.key,
-              icon: item.icon,
-              label: item.label,
-              children: item.children?.map((child) => ({
-                key: child.key,
-                icon: child.icon,
-                label: child.label,
-              })),
-              style: {
-                margin: '4px 8px',
-                borderRadius: 8,
-                height: 48,
-                lineHeight: '48px',
-              },
-            }))}
+            items={menuItems.map((item) => {
+              if (item.children) {
+                return {
+                  key: item.key,
+                  icon: item.icon,
+                  label: item.label,
+                  type: 'submenu',
+                  children: item.children.map((child) => ({
+                    key: child.key,
+                    icon: child.icon,
+                    label: child.label,
+                  })),
+                  style: {
+                    margin: '4px 0',
+                    borderRadius: 8,
+                    height: 48,
+                    lineHeight: '48px',
+                  },
+                };
+              } else {
+                return {
+                  key: item.key,
+                  icon: item.icon,
+                  label: item.label,
+                  style: {
+                    margin: '4px 0',
+                    borderRadius: 8,
+                    height: 48,
+                    lineHeight: '48px',
+                  },
+                };
+              }
+            })}
           />
         </Sider>
 
@@ -263,6 +348,7 @@ const MainLayout: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
+              position: 'relative',
             }}
           >
             <Space>
@@ -292,6 +378,26 @@ const MainLayout: React.FC = () => {
                 {findMenuItemByKey(menuItems, selectedKey)?.label || '仪表盘'}
               </Title>
             </Space>
+
+            {/* 中间的日期时间显示 */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 500,
+                  color: '#262626',
+                  letterSpacing: '1px',
+                }}
+              >
+                {formatCurrentTime()}
+              </div>
+            </div>
 
             <Space>
               {/* 系统通知按钮 */}
@@ -354,6 +460,9 @@ const MainLayout: React.FC = () => {
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/review" element={<Review />} />
+              <Route path="/admin/images" element={<ImageManagement />} />
+              <Route path="/admin/videos" element={<VideoManagement />} />
+              <Route path="/admin/music" element={<MusicManagement />} />
             </Routes>
           </Content>
         </Layout>

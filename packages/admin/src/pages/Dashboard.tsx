@@ -43,6 +43,13 @@ interface DashboardStats {
   totalViews: number;
 }
 
+interface RecentStats {
+  newUsersToday: number;
+  newUsersWeek: number;
+  newUsersMonth: number;
+  newImagesWeek: number;
+}
+
 interface ReviewStats {
   pending: number;
   approved: number;
@@ -57,6 +64,12 @@ const Dashboard: React.FC = () => {
     totalImages: 0,
     totalVideos: 0,
     totalViews: 0,
+  });
+  const [recentStats, setRecentStats] = useState<RecentStats>({
+    newUsersToday: 0,
+    newUsersWeek: 0,
+    newUsersMonth: 0,
+    newImagesWeek: 0,
   });
   const [reviewStats, setReviewStats] = useState<ReviewStats>({
     pending: 0,
@@ -100,6 +113,9 @@ const Dashboard: React.FC = () => {
       if (data.reviewStats) {
         setReviewStats(data.reviewStats);
       }
+      if (data.recentStats) {
+        setRecentStats(data.recentStats);
+      }
     } catch (error) {
       message.error('获取统计数据失败');
       console.error('获取仪表盘统计失败:', error);
@@ -109,6 +125,12 @@ const Dashboard: React.FC = () => {
         totalImages: 3420,
         totalVideos: 156,
         totalViews: 89650,
+      });
+      setRecentStats({
+        newUsersToday: 15,
+        newUsersWeek: 89,
+        newUsersMonth: 234,
+        newImagesWeek: 156,
       });
     }
   };
@@ -130,38 +152,55 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // 计算增长率
+  const calculateGrowthRate = (current: number, recent: number): { rate: string; isUp: boolean } => {
+    if (current === 0) return { rate: '0%', isUp: true };
+    const previousWeek = current - recent;
+    if (previousWeek <= 0) return { rate: '+100%', isUp: true };
+    const growthRate = ((recent / previousWeek) * 100).toFixed(1);
+    return {
+      rate: `+${growthRate}%`,
+      isUp: parseFloat(growthRate) >= 0,
+    };
+  };
+
+  const userGrowth = calculateGrowthRate(stats.totalUsers, recentStats.newUsersWeek);
+  const imageGrowth = calculateGrowthRate(stats.totalImages, recentStats.newImagesWeek);
+  const videoGrowth = { rate: '+5.2%', isUp: true }; // 视频增长率暂时使用固定值
+  const viewGrowth = { rate: '+18.5%', isUp: true }; // 浏览量增长率暂时使用固定值
+
   const statCards = [
     {
       title: '总用户数',
       value: stats.totalUsers,
       icon: <UserOutlined style={{ fontSize: 24, color: '#1890ff' }} />,
       color: '#1890ff',
-      trend: '+12%',
-      isUp: true,
+      trend: userGrowth.rate,
+      isUp: userGrowth.isUp,
     },
     {
       title: '总图片数',
       value: stats.totalImages,
       icon: <PictureOutlined style={{ fontSize: 24, color: '#52c41a' }} />,
       color: '#52c41a',
-      trend: '+8%',
-      isUp: true,
+      trend: imageGrowth.rate,
+      isUp: imageGrowth.isUp,
     },
     {
       title: '总视频数',
       value: stats.totalVideos,
       icon: <VideoCameraOutlined style={{ fontSize: 24, color: '#722ed1' }} />,
       color: '#722ed1',
-      trend: '+15%',
-      isUp: true,
+      trend: videoGrowth.rate,
+      isUp: videoGrowth.isUp,
     },
     {
       title: '总浏览量',
       value: stats.totalViews,
       icon: <EyeOutlined style={{ fontSize: 24, color: '#fa8c16' }} />,
       color: '#fa8c16',
-      trend: '+25%',
-      isUp: true,
+      trend: viewGrowth.rate,
+      isUp: viewGrowth.isUp,
     },
   ];
 
