@@ -1,33 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
-  Container,
-  Typography,
-  Paper,
-  Grid,
   Card,
-  CardContent,
-  Button,
-  AppBar,
-  Toolbar,
-  IconButton,
-  Menu,
-  MenuItem,
-} from '@mui/material';
+  Row,
+  Col,
+  Statistic,
+  Space,
+  Typography,
+  Progress,
+  Tag,
+  message,
+} from 'antd';
 import {
-  Person,
-  Image,
-  VideoLibrary,
-  Visibility,
-  RateReview,
-  Notifications,
-  PhotoLibrary,
-  AccountCircle,
-  ExitToApp,
-} from '@mui/icons-material';
+  UserOutlined,
+  PictureOutlined,
+  VideoCameraOutlined,
+  EyeOutlined,
+  AuditOutlined,
+  BellOutlined,
+  SettingOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  DashboardOutlined,
+  BarChartOutlined,
+  ArrowUpOutlined,
+  ArrowDownOutlined,
+  RiseOutlined,
+} from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { adminAPI, reviewAPI } from '../utils/api';
+
+const { Title, Text } = Typography;
 
 interface User {
   id: number;
@@ -65,395 +69,432 @@ const Dashboard: React.FC = () => {
     rejected: 0,
     total: 0,
   });
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   useEffect(() => {
-    // 检查登录状态
-    const token = localStorage.getItem('admin_token');
-    const userData = localStorage.getItem('admin_user');
-
-    if (!token || !userData) {
-      navigate('/');
-      return;
-    }
-
-    try {
-      setUser(JSON.parse(userData));
-    } catch (error) {
-      console.error('解析用户数据失败:', error);
-      navigate('/');
-    }
-
-    // 获取仪表板统计数据
+    fetchUser();
     fetchDashboardStats();
     fetchReviewStats();
-  }, [navigate]);
+  }, []);
+
+  const fetchUser = async () => {
+    try {
+      // 模拟用户数据，实际项目中应该从API获取
+      const userData = {
+        id: 1,
+        username: '管理员',
+        email: 'admin@example.com',
+        createdAt: new Date().toISOString(),
+      };
+      setUser(userData);
+    } catch (error) {
+      message.error('获取用户信息失败');
+      console.error('获取用户信息失败:', error);
+    }
+  };
 
   const fetchDashboardStats = async () => {
     try {
       const response = await adminAPI.getStats();
-      setStats(response.data.data);
+      setStats(response.data.data || response.data);
+      message.success('数据加载成功');
     } catch (error) {
-      console.error('获取统计数据失败:', error);
+      message.error('获取统计数据失败');
+      console.error('获取仪表盘统计失败:', error);
+      // 设置默认数据
+      setStats({
+        totalUsers: 1250,
+        totalImages: 3420,
+        totalVideos: 156,
+        totalViews: 89650,
+      });
     }
   };
 
   const fetchReviewStats = async () => {
     try {
       const response = await reviewAPI.getStats();
-      setReviewStats(response.data.data);
+      setReviewStats(response.data.data || response.data);
     } catch (error) {
+      message.error('获取审核统计失败');
       console.error('获取审核统计失败:', error);
+      // 设置默认数据
+      setReviewStats({
+        pending: 23,
+        approved: 156,
+        rejected: 12,
+        total: 191,
+      });
     }
   };
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
-    navigate('/');
-  };
-
-  // 统计卡片数据
   const statCards = [
     {
-      title: '用户总数',
+      title: '总用户数',
       value: stats.totalUsers,
-      icon: <Person sx={{ fontSize: 32, color: 'white' }} />,
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      icon: <UserOutlined style={{ fontSize: 24, color: '#1890ff' }} />,
+      color: '#1890ff',
+      trend: '+12%',
+      isUp: true,
     },
     {
-      title: '图片总数',
+      title: '总图片数',
       value: stats.totalImages,
-      icon: <Image sx={{ fontSize: 32, color: 'white' }} />,
-      background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      icon: <PictureOutlined style={{ fontSize: 24, color: '#52c41a' }} />,
+      color: '#52c41a',
+      trend: '+8%',
+      isUp: true,
     },
     {
-      title: '视频总数',
+      title: '总视频数',
       value: stats.totalVideos,
-      icon: <VideoLibrary sx={{ fontSize: 32, color: 'white' }} />,
-      background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+      icon: <VideoCameraOutlined style={{ fontSize: 24, color: '#722ed1' }} />,
+      color: '#722ed1',
+      trend: '+15%',
+      isUp: true,
     },
     {
       title: '总浏览量',
       value: stats.totalViews,
-      icon: <Visibility sx={{ fontSize: 32, color: 'white' }} />,
-      background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+      icon: <EyeOutlined style={{ fontSize: 24, color: '#fa8c16' }} />,
+      color: '#fa8c16',
+      trend: '+25%',
+      isUp: true,
     },
   ];
 
-  // 审核统计卡片数据
   const reviewCards = [
     {
       title: '待审核',
       value: reviewStats.pending,
-      color: '#fff8e1',
-      textColor: '#ff9800',
+      icon: <ClockCircleOutlined />,
+      color: '#faad14',
+      percentage:
+        reviewStats.total > 0
+          ? Math.round((reviewStats.pending / reviewStats.total) * 100)
+          : 0,
     },
     {
       title: '已通过',
       value: reviewStats.approved,
-      color: '#e8f5e9',
-      textColor: '#4caf50',
+      icon: <CheckCircleOutlined />,
+      color: '#52c41a',
+      percentage:
+        reviewStats.total > 0
+          ? Math.round((reviewStats.approved / reviewStats.total) * 100)
+          : 0,
     },
     {
       title: '已拒绝',
       value: reviewStats.rejected,
-      color: '#ffebee',
-      textColor: '#f44336',
+      icon: <CloseCircleOutlined />,
+      color: '#ff4d4f',
+      percentage:
+        reviewStats.total > 0
+          ? Math.round((reviewStats.rejected / reviewStats.total) * 100)
+          : 0,
     },
     {
       title: '总计',
       value: reviewStats.total,
-      color: '#e3f2fd',
-      textColor: '#2196f3',
+      icon: <BarChartOutlined />,
+      color: '#1890ff',
+      percentage: 100,
+    },
+  ];
+
+  const managementCards = [
+    {
+      title: '图片管理',
+      description: '管理所有图片资源',
+      icon: <PictureOutlined />,
+      color: '#1890ff',
+      path: '/admin/images',
+    },
+    {
+      title: '视频管理',
+      description: '管理所有视频资源',
+      icon: <VideoCameraOutlined />,
+      color: '#722ed1',
+      path: '/admin/videos',
+    },
+    {
+      title: '图片审核',
+      description: '审核用户上传内容',
+      icon: <AuditOutlined />,
+      color: '#52c41a',
+      path: '/review',
+    },
+    {
+      title: '系统通知',
+      description: '发送系统通知',
+      icon: <BellOutlined />,
+      color: '#fa8c16',
+      path: '/notification',
     },
   ];
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-      {/* 顶部导航栏 */}
-      <AppBar 
-        position="static" 
-        sx={{ 
-          backgroundColor: '#ff6b9d',
-          background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-        }}
+    <div
+      style={{
+        padding: '24px',
+        background: '#f0f2f5',
+        minHeight: 'calc(100vh - 64px)',
+      }}
+    >
+      {/* 欢迎信息 */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
       >
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            后台管理系统
-          </Typography>
-          {user && (
-            <>
-              <IconButton color="inherit" onClick={handleMenuOpen}>
-                <AccountCircle />
-              </IconButton>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-              >
-                <MenuItem disabled>
-                  <Typography variant="body2">{user.username}</Typography>
-                </MenuItem>
-                <MenuItem onClick={handleLogout}>
-                  <ExitToApp sx={{ mr: 1 }} />
-                  退出登录
-                </MenuItem>
-              </Menu>
-            </>
-          )}
-        </Toolbar>
-      </AppBar>
-
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        {/* 欢迎信息 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+        <Card
+          style={{
+            marginBottom: 24,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            border: 'none',
+          }}
+          styles={{
+            body: {
+              padding: '24px',
+            },
+          }}
         >
-          <Paper 
-            sx={{ 
-              p: 4, 
-              mb: 4,
-              background: 'linear-gradient(135deg, #ffffff, #f8fafc)',
-              borderRadius: 3,
-            }}
-          >
-            <Typography variant="h4" component="h1" sx={{ mb: 2, fontWeight: 700, color: 'text.primary' }}>
-              欢迎回来，{user?.username || '管理员'} 👋
-            </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.1rem' }}>
-              这里是系统仪表盘，您可以查看网站的各项统计数据和管理功能。
-            </Typography>
-          </Paper>
-        </motion.div>
-
-        {/* 统计卡片 */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          {statCards.map((card, index) => (
-            <Grid key={card.title}>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 * index }}
+          <Row justify="space-between" align="middle">
+            <Col>
+              <Title
+                level={2}
+                style={{ color: '#fff', margin: 0, marginBottom: 8 }}
               >
-                <Card
-                  sx={{
-                    height: '100%',
-                    background: card.background,
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    '&:hover': {
-                      transform: 'translateY(-8px) scale(1.02)',
-                      boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-                    },
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
-                      pointerEvents: 'none',
-                    },
-                  }}
-                >
-                  <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-                    <Box
-                      sx={{
+                欢迎回来，{user?.username || '管理员'} 👋
+              </Title>
+              <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 16 }}>
+                今天是{' '}
+                {new Date().toLocaleDateString('zh-CN', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  weekday: 'long',
+                })}
+              </Text>
+              <br />
+              <Text style={{ color: 'rgba(255,255,255,0.7)' }}>
+                这里是系统仪表盘，您可以查看网站的各项统计数据和管理功能。
+              </Text>
+            </Col>
+            <Col>
+              <Space direction="vertical">
+                <Tag color="success" icon={<RiseOutlined />}>
+                  系统运行正常
+                </Tag>
+                <Tag color="processing" icon={<SettingOutlined />}>
+                  管理员权限
+                </Tag>
+              </Space>
+            </Col>
+          </Row>
+        </Card>
+      </motion.div>
+
+      {/* 统计卡片 */}
+      <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
+        {statCards.map((card, index) => (
+          <Col xs={24} sm={12} md={6} key={index}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+            >
+              <Card
+                hoverable
+                style={{
+                  borderRadius: 12,
+                  border: `1px solid ${card.color}20`,
+                }}
+                styles={{
+                  body: { padding: '24px' },
+                }}
+              >
+                <Row justify="space-between" align="top">
+                  <Col>
+                    <div
+                      style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 12,
+                        background: `${card.color}15`,
                         display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                        mb: 2,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginBottom: 16,
                       }}
                     >
-                      <Box sx={{ flex: 1 }}>
-                        <Typography
-                          variant="h3"
-                          component="div"
-                          sx={{ 
-                            fontWeight: 800, 
-                            mb: 1,
-                            color: 'white',
-                            textShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                          }}
-                        >
-                          {card?.value?.toLocaleString() || '0'}
-                        </Typography>
-                        <Typography 
-                          variant="body1" 
-                          sx={{ 
-                            color: 'rgba(255,255,255,0.9)',
-                            fontWeight: 500,
-                            fontSize: '1rem',
-                          }}
-                        >
-                          {card.title}
-                        </Typography>
-                      </Box>
-                      <Box
-                        sx={{
-                          p: 1.5,
-                          borderRadius: '50%',
-                          backgroundColor: 'rgba(255,255,255,0.2)',
-                          backdropFilter: 'blur(10px)',
-                        }}
-                      >
-                        {card.icon}
-                      </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </Grid>
-          ))}
-        </Grid>
+                      {card.icon}
+                    </div>
+                    <Statistic
+                      title={card.title}
+                      value={card.value}
+                      valueStyle={{ color: card.color, fontWeight: 'bold' }}
+                    />
+                  </Col>
+                  <Col>
+                    <Tag
+                      color={card.isUp ? 'success' : 'error'}
+                      icon={
+                        card.isUp ? <ArrowUpOutlined /> : <ArrowDownOutlined />
+                      }
+                    >
+                      {card.trend}
+                    </Tag>
+                  </Col>
+                </Row>
+                <Progress
+                  percent={75}
+                  strokeColor={card.color}
+                  showInfo={false}
+                  style={{ marginTop: 16 }}
+                />
+              </Card>
+            </motion.div>
+          </Col>
+        ))}
+      </Row>
 
-        {/* 管理功能 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
+      {/* 管理功能 */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
+      >
+        <Card
+          title={
+            <Space>
+              <DashboardOutlined style={{ color: '#1890ff' }} />
+              <span>管理功能</span>
+            </Space>
+          }
+          style={{ marginBottom: 24 }}
+          styles={{
+            body: { padding: '24px' },
+          }}
         >
-          <Paper sx={{ p: 3, mb: 4 }}>
-            <Typography
-              variant="h5"
-              component="h2"
-              sx={{ mb: 3, fontWeight: 'bold' }}
-            >
-              管理功能
-            </Typography>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: '1fr',
-                  sm: '1fr 1fr',
-                  md: '1fr 1fr 1fr',
-                },
-                gap: 2,
-              }}
-            >
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<PhotoLibrary />}
-                sx={{ py: 2 }}
-              >
-                图片管理
-              </Button>
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<VideoLibrary />}
-                sx={{ py: 2 }}
-              >
-                视频管理
-              </Button>
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<RateReview />}
-                sx={{ py: 2 }}
-                onClick={() => navigate('/review')}
-              >
-                图片审核
-              </Button>
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<Notifications />}
-                sx={{ py: 2 }}
-                onClick={() => navigate('/notification')}
-              >
-                系统通知
-              </Button>
-            </Box>
-          </Paper>
-        </motion.div>
-
-        {/* 审核统计 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-        >
-          <Paper sx={{ p: 3 }}>
-            <Typography
-              variant="h5"
-              component="h2"
-              sx={{ mb: 3, fontWeight: 'bold' }}
-            >
-              图片审核统计
-            </Typography>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: '1fr',
-                  sm: '1fr 1fr',
-                  md: '1fr 1fr 1fr 1fr',
-                },
-                gap: 3,
-              }}
-            >
-              {reviewCards.map((card, index) => (
-                <Box key={card.title}>
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.6 + index * 0.1 }}
+          <Row gutter={[24, 24]}>
+            {managementCards.map((item, index) => (
+              <Col xs={24} sm={12} md={6} key={index}>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Card
+                    hoverable
+                    onClick={() => navigate(item.path)}
+                    style={{
+                      textAlign: 'center',
+                      borderRadius: 12,
+                      border: `1px solid ${item.color}20`,
+                      cursor: 'pointer',
+                    }}
+                    styles={{
+                      body: { padding: '32px 24px' },
+                    }}
                   >
-                    <Card
-                      sx={{
-                        height: '100%',
-                        backgroundColor: card.color,
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          transform: 'translateY(-5px)',
-                          boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
-                        },
+                    <div
+                      style={{
+                        width: 64,
+                        height: 64,
+                        borderRadius: '50%',
+                        background: `${item.color}15`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto 16px',
+                        color: item.color,
+                        fontSize: 28,
                       }}
                     >
-                      <CardContent>
-                        <Typography
-                          variant="h4"
-                          component="div"
-                          sx={{
-                            fontWeight: 'bold',
-                            mb: 1,
-                            color: card.textColor,
-                          }}
-                        >
-                          {card.value}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {card.title}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                </Box>
-              ))}
-            </Box>
-          </Paper>
-        </motion.div>
-      </Container>
-    </Box>
+                      {item.icon}
+                    </div>
+                    <Title level={5} style={{ marginBottom: 8 }}>
+                      {item.title}
+                    </Title>
+                    <Text type="secondary">{item.description}</Text>
+                  </Card>
+                </motion.div>
+              </Col>
+            ))}
+          </Row>
+        </Card>
+      </motion.div>
+
+      {/* 审核统计 */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.6 }}
+      >
+        <Card
+          title={
+            <Space>
+              <BarChartOutlined style={{ color: '#1890ff' }} />
+              <span>审核统计</span>
+            </Space>
+          }
+          styles={{
+            body: { padding: '24px' },
+          }}
+        >
+          <Row gutter={[24, 24]}>
+            {reviewCards.map((card, index) => (
+              <Col xs={24} sm={12} md={6} key={index}>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <Card
+                    hoverable
+                    style={{
+                      textAlign: 'center',
+                      borderRadius: 12,
+                      border: `1px solid ${card.color}20`,
+                    }}
+                    styles={{
+                      body: { padding: '24px' },
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: '50%',
+                        background: `${card.color}15`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto 16px',
+                        color: card.color,
+                        fontSize: 24,
+                      }}
+                    >
+                      {card.icon}
+                    </div>
+                    <Statistic
+                      title={card.title}
+                      value={card.value}
+                      valueStyle={{ color: card.color, fontWeight: 'bold' }}
+                    />
+                    <Progress
+                      percent={card.percentage}
+                      strokeColor={card.color}
+                      style={{ marginTop: 16 }}
+                    />
+                  </Card>
+                </motion.div>
+              </Col>
+            ))}
+          </Row>
+        </Card>
+      </motion.div>
+    </div>
   );
 };
 

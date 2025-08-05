@@ -88,5 +88,5 @@ export const reviewAPI = {
 export const notificationAPI = {
   // 创建系统通知
   createSystemNotification: (data: { title: string; content: string }) =>
-    api.post('/notification/system', data),
+    api.post('/notifications/system', data),
 };
