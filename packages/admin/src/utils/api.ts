@@ -43,9 +43,20 @@ export default api;
 
 // API接口定义
 export const authAPI = {
-  // 管理员登录
+  // 登录
   login: (data: { username: string; password: string }) =>
     api.post('/auth/login', data),
+
+  // 获取个人资料
+  getProfile: () => api.get('/auth/profile'),
+
+  // 更新个人资料
+  updateProfile: (data: {
+    nickname?: string;
+    email?: string;
+    avatar?: string;
+    password?: string;
+  }) => api.put('/auth/profile', data),
 };
 
 export const adminAPI = {
@@ -103,7 +114,7 @@ export const userAPI = {
     role?: string;
   }) => api.get('/users', { params }),
 
-  // 获取用户详情
+  // 获取单个用户
   getUserById: (id: string) => api.get(`/users/${id}`),
 
   // 创建用户
@@ -117,18 +128,21 @@ export const userAPI = {
   }) => api.post('/users', data),
 
   // 更新用户
-  updateUser: (id: string, data: {
-    username?: string;
-    email?: string;
-    nickname?: string;
-    role?: 'admin' | 'user' | 'moderator';
-    status?: 'active' | 'inactive' | 'banned';
-  }) => api.put(`/users/${id}`, data),
+  updateUser: (
+    id: string,
+    data: {
+      username?: string;
+      email?: string;
+      nickname?: string;
+      role?: 'admin' | 'user' | 'moderator';
+      status?: 'active' | 'inactive' | 'banned';
+    },
+  ) => api.put(`/users/${id}`, data),
 
   // 删除用户
   deleteUser: (id: string) => api.delete(`/users/${id}`),
 
-  // 重置用户密码
+  // 重置密码
   resetPassword: (id: string, data: { password: string }) =>
     api.post(`/users/${id}/reset-password`, data),
 
@@ -138,6 +152,24 @@ export const userAPI = {
     action: 'activate' | 'deactivate' | 'ban' | 'delete';
   }) => api.post('/users/batch', data),
 
-  // 获取用户统计信息
+  // 获取用户统计
   getUserStats: () => api.get('/users/stats'),
+};
+
+export const uploadAPI = {
+  // 公共单文件上传（无需认证）
+  uploadPublicSingle: (formData: FormData) =>
+    api.post('/upload/public/single', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
+
+  // 公共多文件上传（无需认证）
+  uploadPublicMultiple: (formData: FormData) =>
+    api.post('/upload/public/multiple', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
 };

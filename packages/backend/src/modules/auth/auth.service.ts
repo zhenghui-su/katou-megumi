@@ -1,15 +1,12 @@
-import {
-	Injectable,
-	UnauthorizedException,
-	ConflictException,
-} from '@nestjs/common';
+import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 import { User } from '../../entities/User';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class AuthService {
@@ -99,6 +96,43 @@ export class AuthService {
 				role: user.role,
 			},
 			token,
+		};
+	}
+
+	async updateProfile(userId: number, updateProfileDto: UpdateProfileDto) {
+		const user = await this.userRepository.findOne({ where: { id: userId } });
+		if (!user) {
+			throw new UnauthorizedException('用户不存在');
+		}
+
+		// 如果更新邮箱，检查是否已存在
+		if (updateProfileDto.email && updateProfileDto.email !== user.email) {
+			const existingUser = await this.userRepository.findOne({
+				where: { email: updateProfileDto.email },
+			});
+			if (existingUser) {
+				throw new ConflictException('邮箱已存在');
+			}
+		}
+
+		// 如果更新密码，进行加密
+		if (updateProfileDto.password) {
+			updateProfileDto.password = await bcrypt.hash(updateProfileDto.password, 10);
+		}
+
+		// 更新用户信息
+		await this.userRepository.update(userId, updateProfileDto);
+
+		// 返回更新后的用户信息（不包含密码）
+		const updatedUser = await this.userRepository.findOne({ where: { id: userId } });
+		return {
+			id: updatedUser!.id,
+			username: updatedUser!.username,
+			email: updatedUser!.email,
+			nickname: updatedUser!.nickname,
+			avatar: updatedUser!.avatar,
+			role: updatedUser!.role,
+			status: updatedUser!.status,
 		};
 	}
 

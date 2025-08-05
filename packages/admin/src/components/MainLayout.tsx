@@ -40,7 +40,9 @@ import MusicManagement from '../pages/MusicManagement';
 import ImageManagement from '../pages/ImageManagement';
 import VideoManagement from '../pages/VideoManagement';
 import UserManagement from '../pages/UserManagement';
+import Profile from '../pages/Profile';
 import { notificationAPI } from '../utils/api';
+import { useUser } from '../contexts/UserContext';
 
 const { Header, Sider, Content } = Layout;
 const { Title } = Typography;
@@ -111,14 +113,13 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
 const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
-  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [notificationLoading, setNotificationLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [notificationForm] = Form.useForm();
-  const [profileForm] = Form.useForm();
   const [openMenuKeys, setOpenMenuKeys] = useState<string[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
+  const { userProfile } = useUser();
 
   // 更新当前时间
   useEffect(() => {
@@ -134,19 +135,6 @@ const MainLayout: React.FC = () => {
     const autoOpenKeys = getOpenKeys(menuItems, location.pathname);
     setOpenMenuKeys(autoOpenKeys);
   }, [location.pathname]);
-
-  // 初始化个人资料表单数据
-  useEffect(() => {
-    if (profileModalOpen) {
-      // 模拟当前用户数据，实际应该从API获取
-      const currentUser = {
-        username: 'admin',
-        nickname: '管理员',
-        email: 'admin@example.com',
-      };
-      profileForm.setFieldsValue(currentUser);
-    }
-  }, [profileModalOpen, profileForm]);
 
   // 格式化当前时间显示
   const formatCurrentTime = () => {
@@ -234,13 +222,7 @@ const MainLayout: React.FC = () => {
   const handleUserMenuClick = ({ key }: { key: string }) => {
     switch (key) {
       case 'profile':
-        setProfileModalOpen(true);
-        // 设置当前用户信息到表单
-        profileForm.setFieldsValue({
-          username: '管理员',
-          email: 'admin@example.com',
-          nickname: '系统管理员',
-        });
+        navigate('/admin/profile');
         break;
       case 'settings':
         message.info('系统设置功能开发中...');
@@ -250,17 +232,6 @@ const MainLayout: React.FC = () => {
         break;
       default:
         break;
-    }
-  };
-
-  const handleProfileSubmit = async (values: any) => {
-    try {
-      // 这里应该调用API更新用户信息
-      console.log('更新用户信息:', values);
-      message.success('个人资料更新成功');
-      setProfileModalOpen(false);
-    } catch (error) {
-      message.error('更新失败，请重试');
     }
   };
 
@@ -461,10 +432,7 @@ const MainLayout: React.FC = () => {
                 type="text"
                 icon={<NotificationOutlined />}
                 onClick={() => setNotificationModalOpen(true)}
-                style={{
-                  borderRadius: 8,
-                  color: '#666',
-                }}
+                style={{ borderRadius: 8, color: '#666' }}
               >
                 系统通知
               </Button>
@@ -475,31 +443,22 @@ const MainLayout: React.FC = () => {
                   items: userMenuItems,
                   onClick: handleUserMenuClick,
                 }}
-                placement="bottomRight"
-                arrow
+                placement="bottomLeft"
               >
-                <Space
-                  style={{
-                    cursor: 'pointer',
-                    padding: '8px 12px',
-                    borderRadius: 8,
-                    transition: 'all 0.3s',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#f0f0f0';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                  }}
-                >
+                <Space style={{ cursor: 'pointer' }}>
                   <Avatar
                     size={32}
-                    icon={<UserOutlined />}
+                    src={userProfile?.avatar}
+                    icon={!userProfile?.avatar ? <UserOutlined /> : undefined}
                     style={{
-                      background: 'linear-gradient(135deg, #1890ff, #722ed1)',
+                      background: userProfile?.avatar
+                        ? 'transparent'
+                        : 'linear-gradient(135deg, #1890ff, #722ed1)',
                     }}
                   />
-                  <span style={{ color: '#333', fontWeight: 500 }}>管理员</span>
+                  <span style={{ color: '#333', fontWeight: 500 }}>
+                    {userProfile?.nickname || userProfile?.username || '管理员'}
+                  </span>
                 </Space>
               </Dropdown>
             </Space>
@@ -514,13 +473,14 @@ const MainLayout: React.FC = () => {
             }}
           >
             <Routes>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/admin/users" element={<UserManagement />} />
+              <Route path="/admin/profile" element={<Profile />} />
               <Route path="/review" element={<Review />} />
               <Route path="/admin/images" element={<ImageManagement />} />
               <Route path="/admin/videos" element={<VideoManagement />} />
               <Route path="/admin/music" element={<MusicManagement />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </Content>
         </Layout>
@@ -585,98 +545,6 @@ const MainLayout: React.FC = () => {
                   icon={<SendOutlined />}
                 >
                   {notificationLoading ? '发送中...' : '发送通知'}
-                </Button>
-              </Space>
-            </Form.Item>
-          </Form>
-        </Modal>
-
-        {/* 个人资料Modal */}
-        <Modal
-          title="个人资料"
-          open={profileModalOpen}
-          onCancel={() => {
-            setProfileModalOpen(false);
-            profileForm.resetFields();
-          }}
-          footer={null}
-          width={500}
-        >
-          <Form
-            form={profileForm}
-            layout="vertical"
-            onFinish={handleProfileSubmit}
-          >
-            <Form.Item
-              label="用户名"
-              name="username"
-              rules={[
-                { required: true, message: '请输入用户名' },
-                { min: 3, message: '用户名至少3个字符' },
-              ]}
-            >
-              <Input placeholder="请输入用户名" disabled />
-            </Form.Item>
-
-            <Form.Item
-              label="昵称"
-              name="nickname"
-              rules={[{ required: true, message: '请输入昵称' }]}
-            >
-              <Input placeholder="请输入昵称" />
-            </Form.Item>
-
-            <Form.Item
-              label="邮箱"
-              name="email"
-              rules={[
-                { required: true, message: '请输入邮箱' },
-                { type: 'email', message: '请输入有效的邮箱地址' },
-              ]}
-            >
-              <Input placeholder="请输入邮箱" />
-            </Form.Item>
-
-            <Form.Item
-              label="新密码"
-              name="password"
-              rules={[
-                { min: 6, message: '密码至少6个字符' },
-              ]}
-            >
-              <Input.Password placeholder="留空则不修改密码" />
-            </Form.Item>
-
-            <Form.Item
-              label="确认密码"
-              name="confirmPassword"
-              dependencies={['password']}
-              rules={[
-                ({ getFieldValue }) => ({
-                  validator(_, value) {
-                    if (!value || getFieldValue('password') === value) {
-                      return Promise.resolve();
-                    }
-                    return Promise.reject(new Error('两次输入的密码不一致'));
-                  },
-                }),
-              ]}
-            >
-              <Input.Password placeholder="请再次输入新密码" />
-            </Form.Item>
-
-            <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
-              <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
-                <Button
-                  onClick={() => {
-                    setProfileModalOpen(false);
-                    profileForm.resetFields();
-                  }}
-                >
-                  取消
-                </Button>
-                <Button type="primary" htmlType="submit">
-                  保存修改
                 </Button>
               </Space>
             </Form.Item>

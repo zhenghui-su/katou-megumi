@@ -3,6 +3,7 @@ import { ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import MainLayout from './components/MainLayout';
 import Login from './pages/Login';
+import { UserProvider } from './contexts/UserContext';
 import './App.css';
 
 function App() {
@@ -37,12 +38,14 @@ function App() {
         },
       }}
     >
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/*" element={<MainLayout />} />
-        </Routes>
-      </Router>
+      <UserProvider>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/*" element={<MainLayout />} />
+          </Routes>
+        </Router>
+      </UserProvider>
     </ConfigProvider>
   );
 }
