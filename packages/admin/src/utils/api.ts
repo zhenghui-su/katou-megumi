@@ -50,7 +50,9 @@ export const authAPI = {
 
 export const adminAPI = {
   // 获取统计数据
-  getStats: () => api.get('/review/stats'),
+  getStats: () => api.get('/admin/stats'),
+  // 获取仪表盘数据
+  getDashboardData: () => api.get('/admin/dashboard'),
 };
 
 export const reviewAPI = {

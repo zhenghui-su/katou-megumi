@@ -1,8 +1,19 @@
 import React, { useState } from 'react';
-import { Layout, Menu, Avatar, Dropdown, Space, Typography, message, Modal, Form, Input, Button } from 'antd';
+import {
+  Layout,
+  Menu,
+  Avatar,
+  Dropdown,
+  Space,
+  Typography,
+  message,
+  Modal,
+  Form,
+  Input,
+  Button,
+} from 'antd';
 import {
   DashboardOutlined,
-  FileSearchOutlined,
   NotificationOutlined,
   UserOutlined,
   LogoutOutlined,
@@ -10,8 +21,17 @@ import {
   MenuUnfoldOutlined,
   SettingOutlined,
   SendOutlined,
+  PictureOutlined,
+  VideoCameraOutlined,
+  AuditOutlined,
 } from '@ant-design/icons';
-import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import {
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  useLocation,
+} from 'react-router-dom';
 import Dashboard from '../pages/Dashboard';
 import Review from '../pages/Review';
 import { notificationAPI } from '../utils/api';
@@ -24,7 +44,8 @@ interface MenuItem {
   key: string;
   icon: React.ReactNode;
   label: string;
-  path: string;
+  path?: string;
+  children?: MenuItem[];
 }
 
 const menuItems: MenuItem[] = [
@@ -36,14 +57,35 @@ const menuItems: MenuItem[] = [
   },
   {
     key: 'review',
-    icon: <FileSearchOutlined />,
+    icon: <AuditOutlined />,
     label: '内容审核',
     path: '/review',
+  },
+  {
+    key: 'management',
+    icon: <SettingOutlined />,
+    label: '内容管理',
+    children: [
+      {
+        key: 'images',
+        icon: <PictureOutlined />,
+        label: '图片管理',
+        path: '/admin/images',
+      },
+      {
+        key: 'videos',
+        icon: <VideoCameraOutlined />,
+        label: '视频管理',
+        path: '/admin/videos',
+      },
+    ],
   },
 ];
 
 // 路由保护组件
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const token = localStorage.getItem('admin_token');
   return token ? <>{children}</> : <Navigate to="/login" replace />;
 };
@@ -57,11 +99,40 @@ const MainLayout: React.FC = () => {
   const location = useLocation();
 
   // 获取当前选中的菜单项
-  const selectedKey = menuItems.find(item => location.pathname === item.path)?.key || 'dashboard';
+  const findSelectedKey = (items: MenuItem[], pathname: string): string => {
+    for (const item of items) {
+      if (item.path === pathname) {
+        return item.key;
+      }
+      if (item.children) {
+        const found = findSelectedKey(item.children, pathname);
+        if (found) return found;
+      }
+    }
+    return 'dashboard';
+  };
+
+  const selectedKey = findSelectedKey(menuItems, location.pathname);
+
+  const findMenuItemByKey = (
+    items: MenuItem[],
+    key: string,
+  ): MenuItem | undefined => {
+    for (const item of items) {
+      if (item.key === key) {
+        return item;
+      }
+      if (item.children) {
+        const found = findMenuItemByKey(item.children, key);
+        if (found) return found;
+      }
+    }
+    return undefined;
+  };
 
   const handleMenuClick = (key: string) => {
-    const item = menuItems.find(item => item.key === key);
-    if (item) {
+    const item = findMenuItemByKey(menuItems, key);
+    if (item && item.path) {
       navigate(item.path);
     }
   };
@@ -72,7 +143,10 @@ const MainLayout: React.FC = () => {
     navigate('/login');
   };
 
-  const handleNotificationSubmit = async (values: { title: string; content: string }) => {
+  const handleNotificationSubmit = async (values: {
+    title: string;
+    content: string;
+  }) => {
     setNotificationLoading(true);
     try {
       const response = await notificationAPI.createSystemNotification(values);
@@ -159,11 +233,16 @@ const MainLayout: React.FC = () => {
               background: 'transparent',
               border: 'none',
             }}
-            items={menuItems.map(item => ({
+            onClick={({ key }) => handleMenuClick(key)}
+            items={menuItems.map((item) => ({
               key: item.key,
               icon: item.icon,
               label: item.label,
-              onClick: () => handleMenuClick(item.key),
+              children: item.children?.map((child) => ({
+                key: child.key,
+                icon: child.icon,
+                label: child.label,
+              })),
               style: {
                 margin: '4px 8px',
                 borderRadius: 8,
@@ -210,7 +289,7 @@ const MainLayout: React.FC = () => {
 
               {/* 页面标题 */}
               <Title level={4} style={{ margin: 0, color: '#333' }}>
-                {menuItems.find(item => item.key === selectedKey)?.label || '仪表盘'}
+                {findMenuItemByKey(menuItems, selectedKey)?.label || '仪表盘'}
               </Title>
             </Space>
 

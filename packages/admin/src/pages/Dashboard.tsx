@@ -15,20 +15,16 @@ import {
   PictureOutlined,
   VideoCameraOutlined,
   EyeOutlined,
-  AuditOutlined,
-  BellOutlined,
   SettingOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
-  DashboardOutlined,
   BarChartOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
   RiseOutlined,
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import { adminAPI, reviewAPI } from '../utils/api';
 
 const { Title, Text } = Typography;
@@ -55,7 +51,6 @@ interface ReviewStats {
 }
 
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
@@ -94,9 +89,17 @@ const Dashboard: React.FC = () => {
 
   const fetchDashboardStats = async () => {
     try {
-      const response = await adminAPI.getStats();
-      setStats(response.data.data || response.data);
-      message.success('数据加载成功');
+      const response = await adminAPI.getDashboardData();
+      const data = response.data.data || response.data;
+      setStats({
+        totalUsers: data.totalUsers,
+        totalImages: data.totalImages,
+        totalVideos: data.totalVideos,
+        totalViews: data.totalViews,
+      });
+      if (data.reviewStats) {
+        setReviewStats(data.reviewStats);
+      }
     } catch (error) {
       message.error('获取统计数据失败');
       console.error('获取仪表盘统计失败:', error);
@@ -202,36 +205,7 @@ const Dashboard: React.FC = () => {
     },
   ];
 
-  const managementCards = [
-    {
-      title: '图片管理',
-      description: '管理所有图片资源',
-      icon: <PictureOutlined />,
-      color: '#1890ff',
-      path: '/admin/images',
-    },
-    {
-      title: '视频管理',
-      description: '管理所有视频资源',
-      icon: <VideoCameraOutlined />,
-      color: '#722ed1',
-      path: '/admin/videos',
-    },
-    {
-      title: '图片审核',
-      description: '审核用户上传内容',
-      icon: <AuditOutlined />,
-      color: '#52c41a',
-      path: '/review',
-    },
-    {
-      title: '系统通知',
-      description: '发送系统通知',
-      icon: <BellOutlined />,
-      color: '#fa8c16',
-      path: '/notification',
-    },
-  ];
+  // 移除管理功能卡片，这些功能将移到左侧导航栏
 
   return (
     <div
@@ -359,71 +333,7 @@ const Dashboard: React.FC = () => {
         ))}
       </Row>
 
-      {/* 管理功能 */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
-      >
-        <Card
-          title={
-            <Space>
-              <DashboardOutlined style={{ color: '#1890ff' }} />
-              <span>管理功能</span>
-            </Space>
-          }
-          style={{ marginBottom: 24 }}
-          styles={{
-            body: { padding: '24px' },
-          }}
-        >
-          <Row gutter={[24, 24]}>
-            {managementCards.map((item, index) => (
-              <Col xs={24} sm={12} md={6} key={index}>
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Card
-                    hoverable
-                    onClick={() => navigate(item.path)}
-                    style={{
-                      textAlign: 'center',
-                      borderRadius: 12,
-                      border: `1px solid ${item.color}20`,
-                      cursor: 'pointer',
-                    }}
-                    styles={{
-                      body: { padding: '32px 24px' },
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: '50%',
-                        background: `${item.color}15`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        margin: '0 auto 16px',
-                        color: item.color,
-                        fontSize: 28,
-                      }}
-                    >
-                      {item.icon}
-                    </div>
-                    <Title level={5} style={{ marginBottom: 8 }}>
-                      {item.title}
-                    </Title>
-                    <Text type="secondary">{item.description}</Text>
-                  </Card>
-                </motion.div>
-              </Col>
-            ))}
-          </Row>
-        </Card>
-      </motion.div>
+      {/* 管理功能已移至左侧导航栏 */}
 
       {/* 审核统计 */}
       <motion.div
