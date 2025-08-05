@@ -12,6 +12,7 @@ import { Work } from './entities/Work';
 import { SiteStats } from './entities/SiteStats';
 import { PendingImage } from './entities/PendingImage';
 import { Notification } from './entities/Notification';
+import { Music } from './entities/Music';
 
 // Modules
 import { AuthModule } from './modules/auth/auth.module';
@@ -23,6 +24,7 @@ import { VideosModule } from './modules/videos/videos.module';
 import { WorksModule } from './modules/works/works.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { UsersModule } from './modules/users/users.module';
+import { MusicModule } from './modules/music/music.module';
 import * as path from 'path';
 
 @Module({
@@ -43,9 +45,18 @@ import * as path from 'path';
 				username: configService.get('DB_USER', 'root'),
 				password: configService.get('DB_PASSWORD', ''),
 				database: configService.get('DB_NAME', 'katou_megumi_fan_site'),
-				entities: [User, Image, Video, Work, SiteStats, PendingImage, Notification],
+				entities: [
+					User,
+					Image,
+					Video,
+					Work,
+					SiteStats,
+					PendingImage,
+					Notification,
+					Music,
+				],
 				synchronize: true, // 开发环境自动同步表结构
-				logging: false,
+				logging: false, // 启用SQL日志以调试删除问题
 			}),
 		}),
 
@@ -71,6 +82,7 @@ import * as path from 'path';
 		WorksModule,
 		NotificationModule,
 		UsersModule,
+		MusicModule,
 	],
 })
 export class AppModule {}

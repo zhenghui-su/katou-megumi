@@ -8,11 +8,7 @@ async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
 
 	// 启用CORS
-	app.enableCors({
-		origin: '*', // 开发环境允许所有来源，生产环境应该限制
-		methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-		allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-	});
+	app.enableCors();
 
 	// 全局验证管道
 	app.useGlobalPipes(
