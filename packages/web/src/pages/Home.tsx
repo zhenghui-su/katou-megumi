@@ -26,9 +26,7 @@ import { motion } from 'framer-motion';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-
-// API 基础URL
-const API_BASE_URL = 'http://localhost:8080/api';
+import { worksAPI, videosAPI } from '../utils/api';
 
 // 类型定义
 interface Work {
@@ -64,11 +62,8 @@ const Home: React.FC = () => {
 	// API 调用函数
 	const fetchWorks = async () => {
 		try {
-			const response = await fetch(`${API_BASE_URL}/works`);
-			if (response.ok) {
-				const data = await response.json();
-				setWorks(data.data.works || []);
-			}
+			const response = await worksAPI.getWorks();
+			setWorks(response.data.data.works || []);
 		} catch (error) {
 			console.error('获取作品数据失败:', error);
 		}
@@ -76,11 +71,8 @@ const Home: React.FC = () => {
 
 	const fetchVideos = async () => {
 		try {
-			const response = await fetch(`${API_BASE_URL}/videos`);
-			if (response.ok) {
-				const data = await response.json();
-				setVideos(data.data.videos || []);
-			}
+			const response = await videosAPI.getVideos();
+			setVideos(response.data.data.videos || []);
 		} catch (error) {
 			console.error('获取视频数据失败:', error);
 		}

@@ -10,6 +10,7 @@ import {
 	NotificationResponse,
 	NotificationContextType,
 } from '../types/notification';
+import { notificationAPI } from '../utils/api';
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
 	undefined
@@ -38,23 +39,15 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
 	// 获取通知列表
 	const fetchNotifications = async () => {
-		const token = localStorage.getItem('token');
+		const token = localStorage.getItem('user_token');
 		if (!token) return;
 
 		setLoading(true);
 		try {
-			const response = await fetch('http://localhost:8080/api/notifications', {
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			});
-
-			if (response.ok) {
-				const data = await response.json();
-				const notificationData: NotificationResponse = data.data;
-				setNotifications(notificationData.notifications);
-				setUnreadCount(notificationData.unreadCount);
-			}
+			const response = await notificationAPI.getNotifications();
+			const notificationData: NotificationResponse = response.data.data;
+			setNotifications(notificationData.notifications);
+			setUnreadCount(notificationData.unreadCount);
 		} catch (error) {
 			console.error('获取通知失败:', error);
 		} finally {
@@ -64,23 +57,12 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
 	// 获取未读通知数量
 	const fetchUnreadCount = async () => {
-		const token = localStorage.getItem('token');
+		const token = localStorage.getItem('user_token');
 		if (!token) return;
 
 		try {
-			const response = await fetch(
-				'http://localhost:8080/api/notifications/unread-count',
-				{
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				}
-			);
-
-			if (response.ok) {
-				const data = await response.json();
-				setUnreadCount(data.data.count);
-			}
+			const response = await notificationAPI.getUnreadCount();
+			setUnreadCount(response.data.data.count);
 		} catch (error) {
 			console.error('获取未读通知数量失败:', error);
 		}
@@ -88,30 +70,19 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
 	// 标记通知为已读
 	const markAsRead = async (id: number) => {
-		const token = localStorage.getItem('token');
+		const token = localStorage.getItem('user_token');
 		if (!token) return;
 
 		try {
-			const response = await fetch(
-				`http://localhost:8080/api/notifications/${id}/read`,
-				{
-					method: 'PUT',
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				}
+			await notificationAPI.markAsRead(id);
+			setNotifications((prev) =>
+				prev.map((notification) =>
+					notification.id === id
+						? { ...notification, isRead: true }
+						: notification
+				)
 			);
-
-			if (response.ok) {
-				setNotifications((prev) =>
-					prev.map((notification) =>
-						notification.id === id
-							? { ...notification, isRead: true }
-							: notification
-					)
-				);
-				setUnreadCount((prev) => Math.max(0, prev - 1));
-			}
+			setUnreadCount((prev) => Math.max(0, prev - 1));
 		} catch (error) {
 			console.error('标记通知为已读失败:', error);
 		}
@@ -119,26 +90,15 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
 	// 标记所有通知为已读
 	const markAllAsRead = async () => {
-		const token = localStorage.getItem('token');
+		const token = localStorage.getItem('user_token');
 		if (!token) return;
 
 		try {
-			const response = await fetch(
-				'http://localhost:8080/api/notifications/read-all',
-				{
-					method: 'PUT',
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				}
+			await notificationAPI.markAllAsRead();
+			setNotifications((prev) =>
+				prev.map((notification) => ({ ...notification, isRead: true }))
 			);
-
-			if (response.ok) {
-				setNotifications((prev) =>
-					prev.map((notification) => ({ ...notification, isRead: true }))
-				);
-				setUnreadCount(0);
-			}
+			setUnreadCount(0);
 		} catch (error) {
 			console.error('标记所有通知为已读失败:', error);
 		}
@@ -146,28 +106,17 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
 	// 删除通知
 	const deleteNotification = async (id: number) => {
-		const token = localStorage.getItem('token');
+		const token = localStorage.getItem('user_token');
 		if (!token) return;
 
 		try {
-			const response = await fetch(
-				`http://localhost:8080/api/notifications/${id}`,
-				{
-					method: 'DELETE',
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				}
+			await notificationAPI.deleteNotification(id);
+			const deletedNotification = notifications.find((n) => n.id === id);
+			setNotifications((prev) =>
+				prev.filter((notification) => notification.id !== id)
 			);
-
-			if (response.ok) {
-				const deletedNotification = notifications.find((n) => n.id === id);
-				setNotifications((prev) =>
-					prev.filter((notification) => notification.id !== id)
-				);
-				if (deletedNotification && !deletedNotification.isRead) {
-					setUnreadCount((prev) => Math.max(0, prev - 1));
-				}
+			if (deletedNotification && !deletedNotification.isRead) {
+				setUnreadCount((prev) => Math.max(0, prev - 1));
 			}
 		} catch (error) {
 			console.error('删除通知失败:', error);
@@ -176,7 +125,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
 	// 定期获取未读通知数量
 	useEffect(() => {
-		const token = localStorage.getItem('token');
+		const token = localStorage.getItem('user_token');
 		if (token) {
 			fetchUnreadCount();
 			const interval = setInterval(fetchUnreadCount, 30000); // 每30秒检查一次

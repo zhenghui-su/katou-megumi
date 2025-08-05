@@ -5,6 +5,7 @@ import React, {
 	useEffect,
 	ReactNode,
 } from 'react';
+import { authAPI } from '../utils/api';
 
 interface User {
 	id: number;
@@ -74,28 +75,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 		setError(null);
 
 		try {
-			const response = await fetch('http://localhost:8080/api/auth/login', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({ username, password }),
-			});
+			const response = await authAPI.login({ username, password });
+			const data = response.data;
 
-			const data = await response.json();
-
-			if (response.ok) {
-				setToken(data.data.token);
-				setUser(data.data.user);
-				localStorage.setItem('user_token', data.data.token);
-				localStorage.setItem('user_data', JSON.stringify(data.data.user));
-				return true;
-			} else {
-				setError(data.message || '登录失败');
-				return false;
-			}
-		} catch (error) {
-			setError('网络错误，请稍后重试');
+			setToken(data.data.token);
+			setUser(data.data.user);
+			localStorage.setItem('user_token', data.data.token);
+			localStorage.setItem('user_data', JSON.stringify(data.data.user));
+			return true;
+		} catch (error: any) {
+			const errorMessage = error.response?.data?.message || '登录失败';
+			setError(errorMessage);
 			return false;
 		} finally {
 			setLoading(false);
@@ -111,24 +101,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 		setError(null);
 
 		try {
-			const response = await fetch('http://localhost:8080/api/auth/register', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({ username, email, password }),
-			});
-
-			const data = await response.json();
-
-			if (response.ok) {
-				return true;
-			} else {
-				setError(data.message || '注册失败');
-				return false;
-			}
-		} catch (error) {
-			setError('网络错误，请稍后重试');
+			await authAPI.register({ username, email, password });
+			return true;
+		} catch (error: any) {
+			const errorMessage = error.response?.data?.message || '注册失败';
+			setError(errorMessage);
 			return false;
 		} finally {
 			setLoading(false);

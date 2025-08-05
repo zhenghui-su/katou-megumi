@@ -21,6 +21,7 @@ import { Add, Close, Download, ZoomIn } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { FileUpload } from '@katou-megumi/shared';
+import { galleryAPI } from '../utils/api';
 
 interface UploadedFile {
 	url: string;
@@ -66,14 +67,9 @@ const Gallery: React.FC = () => {
 	const fetchImages = async () => {
 		try {
 			setLoading(true);
-			const response = await fetch('http://localhost:8080/api/gallery');
-			if (response.ok) {
-				const result = await response.json();
-				if (result.success) {
-					setImages(result.data || []);
-				}
-			} else {
-				console.error('获取图片失败:', response.statusText);
+			const response = await galleryAPI.getImages();
+			if (response.data.success) {
+				setImages(response.data.data || []);
 			}
 		} catch (error) {
 			console.error('获取图片错误:', error);
