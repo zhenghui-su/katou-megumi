@@ -10,39 +10,33 @@ import {
   Upload,
   message,
   Popconfirm,
-  Tag,
   Typography,
-  Row,
-  Col,
-  Statistic,
+  Tooltip,
 } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
   UploadOutlined,
-  SoundOutlined,
-  PlayCircleOutlined,
-  PauseCircleOutlined,
-  CloudUploadOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { UploadFile } from 'antd/es/upload/interface';
+import { musicAPI, uploadAPI } from '../utils/api';
 
 const { Title, Text } = Typography;
-const { TextArea } = Input;
 
 interface MusicItem {
-  id: string;
+  id: number;
   title: string;
   artist: string;
-  album?: string;
+  src: string;
   duration: number;
-  url: string;
-  coverUrl?: string;
-  size: number;
-  uploadTime: string;
-  status: 'active' | 'inactive';
+  cover?: string;
+  category: string;
+  description?: string;
+  playCount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const MusicManagement: React.FC = () => {
@@ -52,7 +46,8 @@ const MusicManagement: React.FC = () => {
   const [editingMusic, setEditingMusic] = useState<MusicItem | null>(null);
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
-  const [currentPlaying, setCurrentPlaying] = useState<string | null>(null);
+  const [coverFileList, setCoverFileList] = useState<UploadFile[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchMusicList();
@@ -61,37 +56,14 @@ const MusicManagement: React.FC = () => {
   const fetchMusicList = async () => {
     setLoading(true);
     try {
-      // 模拟API调用，实际项目中应该从后端获取
-      const mockData: MusicItem[] = [
-        {
-          id: '1',
-          title: '夜に駆ける',
-          artist: 'YOASOBI',
-          album: 'THE BOOK',
-          duration: 239,
-          url: 'https://example.com/music1.mp3',
-          coverUrl: 'https://example.com/cover1.jpg',
-          size: 5.8 * 1024 * 1024,
-          uploadTime: '2024-01-15 10:30:00',
-          status: 'active',
-        },
-        {
-          id: '2',
-          title: '群青',
-          artist: 'YOASOBI',
-          album: 'THE BOOK 2',
-          duration: 201,
-          url: 'https://example.com/music2.mp3',
-          coverUrl: 'https://example.com/cover2.jpg',
-          size: 4.9 * 1024 * 1024,
-          uploadTime: '2024-01-14 15:20:00',
-          status: 'active',
-        },
-      ];
-      setMusicList(mockData);
+      const response = await musicAPI.getMusic();
+      const musicData = response.data.data || response.data || [];
+      setMusicList(musicData);
     } catch (error) {
       message.error('获取音乐列表失败');
       console.error('获取音乐列表失败:', error);
+
+      setMusicList([]);
     } finally {
       setLoading(false);
     }
@@ -102,6 +74,7 @@ const MusicManagement: React.FC = () => {
     setModalVisible(true);
     form.resetFields();
     setFileList([]);
+    setCoverFileList([]);
   };
 
   const handleEdit = (record: MusicItem) => {
@@ -110,15 +83,30 @@ const MusicManagement: React.FC = () => {
     form.setFieldsValue({
       title: record.title,
       artist: record.artist,
-      album: record.album,
+      category: record.category,
     });
     setFileList([]);
+
+    // 回显现有封面
+    if (record.cover) {
+      setCoverFileList([
+        {
+          uid: '-1',
+          name: 'cover.jpg',
+          status: 'done',
+          url: record.cover,
+        },
+      ]);
+    } else {
+      setCoverFileList([]);
+    }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     try {
-      // 实际项目中应该调用删除API
-      setMusicList(prev => prev.filter(item => item.id !== id));
+      await musicAPI.deleteMusic(id);
+      // 删除成功后重新获取音乐列表，确保数据同步
+      await fetchMusicList();
       message.success('删除成功');
     } catch (error) {
       message.error('删除失败');
@@ -127,16 +115,73 @@ const MusicManagement: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    if (submitting) {
+      return; // 防止重复提交
+    }
+    
     try {
+      setSubmitting(true);
       const values = await form.validateFields();
-      
+
       if (editingMusic) {
         // 编辑模式
-        setMusicList(prev => prev.map(item => 
-          item.id === editingMusic.id 
-            ? { ...item, ...values }
-            : item
-        ));
+        let updateData = { ...values };
+
+        // 处理封面更新
+        if (coverFileList.length > 0) {
+          const currentCover = coverFileList[0];
+
+          // 如果是新上传的文件（有originFileObj）
+          if (currentCover.originFileObj) {
+            try {
+              // 上传新封面
+              const coverFormData = new FormData();
+              coverFormData.append('file', currentCover.originFileObj as File);
+              const coverUploadResponse =
+                await uploadAPI.uploadPublicSingle(coverFormData);
+              const coverUploadData =
+                coverUploadResponse.data.data || coverUploadResponse.data;
+              const newCoverUrl = coverUploadData.url || coverUploadData.src;
+
+              updateData.cover = newCoverUrl;
+
+              // 如果之前有封面，删除旧封面
+              if (editingMusic.cover && editingMusic.cover !== newCoverUrl) {
+                try {
+                  await musicAPI.deleteFile(editingMusic.cover);
+                } catch (deleteError) {
+                  console.error('删除旧封面失败:', deleteError);
+                }
+              }
+            } catch (coverUploadError) {
+              message.error('封面上传失败');
+              console.error('封面上传失败:', coverUploadError);
+              return;
+            }
+          } else if (currentCover.url) {
+            // 如果是现有的封面（只有url，没有originFileObj），保持不变
+            updateData.cover = currentCover.url;
+          }
+        } else {
+          // 如果没有封面文件，清空封面
+          updateData.cover = null;
+
+          // 如果之前有封面，删除旧封面
+          if (editingMusic.cover) {
+            try {
+              await musicAPI.deleteFile(editingMusic.cover);
+            } catch (deleteError) {
+              console.warn('删除旧封面失败:', deleteError);
+            }
+          }
+        }
+
+        await musicAPI.updateMusic(editingMusic.id, updateData);
+        setMusicList((prev) =>
+          prev.map((item) =>
+            item.id === editingMusic.id ? { ...item, ...updateData } : item,
+          ),
+        );
         message.success('更新成功');
       } else {
         // 新增模式
@@ -144,59 +189,109 @@ const MusicManagement: React.FC = () => {
           message.error('请选择音乐文件');
           return;
         }
-        
-        const newMusic: MusicItem = {
-          id: Date.now().toString(),
-          ...values,
-          duration: 180, // 模拟时长
-          url: 'https://example.com/new-music.mp3',
-          size: 5 * 1024 * 1024, // 模拟文件大小
-          uploadTime: new Date().toLocaleString(),
-          status: 'active',
-        };
-        
-        setMusicList(prev => [newMusic, ...prev]);
-        message.success('添加成功');
+
+        // 先上传封面文件（如果有）
+        let coverUrl = '';
+        if (coverFileList.length > 0) {
+          const coverFormData = new FormData();
+          coverFormData.append(
+            'file',
+            coverFileList[0].originFileObj as File,
+          );
+          try {
+            const coverUploadResponse =
+              await uploadAPI.uploadPublicSingle(coverFormData);
+            const coverUploadData =
+              coverUploadResponse.data.data || coverUploadResponse.data;
+            coverUrl = coverUploadData.url || coverUploadData.src;
+          } catch (coverUploadError) {
+            console.warn('封面上传失败，继续创建音乐:', coverUploadError);
+          }
+        }
+
+        // 上传音乐文件并创建记录（一步完成）
+        const formData = new FormData();
+        formData.append('file', fileList[0].originFileObj as File);
+        formData.append('title', values.title);
+        formData.append('artist', values.artist);
+        formData.append('category', values.category);
+        formData.append('description', `${values.artist} - ${values.title}`);
+        if (coverUrl) {
+          formData.append('cover', coverUrl);
+        }
+
+        try {
+          const uploadResponse = await musicAPI.uploadMusic(formData);
+          const newMusic = uploadResponse.data.data || uploadResponse.data;
+
+          setMusicList((prev) => [newMusic, ...prev]);
+          message.success('添加成功');
+        } catch (uploadError) {
+          message.error('文件上传失败');
+          console.error('文件上传失败:', uploadError);
+          return;
+        }
       }
-      
+
       setModalVisible(false);
       form.resetFields();
       setFileList([]);
+      setCoverFileList([]);
     } catch (error) {
+      message.error('操作失败');
       console.error('提交失败:', error);
+    } finally {
+      setSubmitting(false);
     }
-  };
-
-  const handlePlay = (id: string) => {
-    if (currentPlaying === id) {
-      setCurrentPlaying(null);
-    } else {
-      setCurrentPlaying(id);
-    }
-  };
-
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const formatFileSize = (bytes: number) => {
-    const mb = bytes / (1024 * 1024);
-    return `${mb.toFixed(1)} MB`;
   };
 
   const columns: ColumnsType<MusicItem> = [
+    {
+      title: '封面',
+      dataIndex: 'cover',
+      key: 'cover',
+      width: 80,
+      render: (cover: string) => (
+        <div
+          style={{
+            width: 50,
+            height: 50,
+            borderRadius: 4,
+            overflow: 'hidden',
+            backgroundColor: '#f5f5f5',
+          }}
+        >
+          {cover ? (
+            <img
+              src={cover}
+              alt="封面"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          ) : (
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#ccc',
+              }}
+            >
+              无
+            </div>
+          )}
+        </div>
+      ),
+    },
     {
       title: '音乐信息',
       key: 'info',
       render: (_, record) => (
         <div>
-          <div style={{ fontWeight: 500, marginBottom: 4 }}>
-            {record.title}
-          </div>
+          <div style={{ fontWeight: 500, marginBottom: 4 }}>{record.title}</div>
           <div style={{ color: '#666', fontSize: 12 }}>
-            {record.artist} {record.album && `• ${record.album}`}
+            {record.artist} {record.category && `• ${record.category}`}
           </div>
         </div>
       ),
@@ -209,64 +304,35 @@ const MusicManagement: React.FC = () => {
       render: (duration: number) => formatDuration(duration),
     },
     {
-      title: '文件大小',
-      dataIndex: 'size',
-      key: 'size',
-      width: 100,
-      render: (size: number) => formatFileSize(size),
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      width: 80,
-      render: (status: string) => (
-        <Tag color={status === 'active' ? 'green' : 'red'}>
-          {status === 'active' ? '启用' : '禁用'}
-        </Tag>
-      ),
-    },
-    {
-      title: '上传时间',
-      dataIndex: 'uploadTime',
-      key: 'uploadTime',
+      title: '创建时间',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
       width: 150,
+      render: (createdAt: string) => new Date(createdAt).toLocaleString(),
     },
     {
       title: '操作',
       key: 'action',
-      width: 200,
+      width: 80,
       render: (_, record) => (
-        <Space>
-          <Button
-            type="text"
-            icon={currentPlaying === record.id ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
-            onClick={() => handlePlay(record.id)}
-            style={{ color: '#1890ff' }}
-          >
-            {currentPlaying === record.id ? '暂停' : '播放'}
-          </Button>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          >
-            编辑
-          </Button>
-          <Popconfirm
-            title="确定要删除这首音乐吗？"
-            onConfirm={() => handleDelete(record.id)}
-            okText="确定"
-            cancelText="取消"
-          >
+        <Space size="middle">
+          <Tooltip title="编辑">
             <Button
               type="text"
-              danger
-              icon={<DeleteOutlined />}
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+            />
+          </Tooltip>
+          <Tooltip title="删除">
+            <Popconfirm
+              title="确定要删除这首音乐吗？"
+              onConfirm={() => handleDelete(record.id)}
+              okText="确定"
+              cancelText="取消"
             >
-              删除
-            </Button>
-          </Popconfirm>
+              <Button type="text" danger icon={<DeleteOutlined />} />
+            </Popconfirm>
+          </Tooltip>
         </Space>
       ),
     },
@@ -292,69 +358,53 @@ const MusicManagement: React.FC = () => {
     },
   };
 
-  const stats = {
-    total: musicList.length,
-    active: musicList.filter(item => item.status === 'active').length,
-    totalSize: musicList.reduce((sum, item) => sum + item.size, 0),
+  const coverUploadProps = {
+    fileList: coverFileList,
+    beforeUpload: (file: File) => {
+      const isImage = file.type.startsWith('image/');
+      if (!isImage) {
+        message.error('只能上传图片文件！');
+        return false;
+      }
+      const isLt5M = file.size / 1024 / 1024 < 5;
+      if (!isLt5M) {
+        message.error('图片文件大小不能超过 5MB！');
+        return false;
+      }
+      return false; // 阻止自动上传
+    },
+    onChange: ({ fileList: newFileList }: { fileList: UploadFile[] }) => {
+      setCoverFileList(newFileList.slice(-1)); // 只保留最后一个文件
+    },
+  };
+
+  // 格式化时长为分秒
+  const formatDuration = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   return (
     <div style={{ padding: 24 }}>
-      {/* 统计卡片 */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="总音乐数"
-              value={stats.total}
-              prefix={<SoundOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="启用中"
-              value={stats.active}
-              prefix={<PlayCircleOutlined />}
-              valueStyle={{ color: '#3f8600' }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="总存储"
-              value={formatFileSize(stats.totalSize)}
-              prefix={<CloudUploadOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="平均大小"
-              value={stats.total > 0 ? formatFileSize(stats.totalSize / stats.total) : '0 MB'}
-            />
-          </Card>
-        </Col>
-      </Row>
-
       {/* 主要内容 */}
       <Card>
-        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div
+          style={{
+            marginBottom: 16,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <Title level={4} style={{ margin: 0 }}>
             音乐管理
           </Title>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleAdd}
-          >
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
             添加音乐
           </Button>
         </div>
-        
+
         <Text type="secondary" style={{ marginBottom: 16, display: 'block' }}>
           管理 shared 音乐播放器的音乐列表，支持上传到云对象存储 COS
         </Text>
@@ -378,40 +428,30 @@ const MusicManagement: React.FC = () => {
         title={editingMusic ? '编辑音乐' : '添加音乐'}
         open={modalVisible}
         onOk={handleSubmit}
+        confirmLoading={submitting}
         onCancel={() => {
           setModalVisible(false);
           form.resetFields();
           setFileList([]);
+          setCoverFileList([]);
+          setSubmitting(false);
         }}
         width={600}
         okText="确定"
         cancelText="取消"
       >
-        <Form
-          form={form}
-          layout="vertical"
-          requiredMark={false}
-        >
+        <Form form={form} layout="vertical" requiredMark={false}>
           {!editingMusic && (
-            <Form.Item
-              label="音乐文件"
-              required
-            >
-              <Upload
-                {...uploadProps}
-                listType="text"
-                maxCount={1}
-              >
-                <Button icon={<UploadOutlined />}>
-                  选择音频文件
-                </Button>
+            <Form.Item label="音乐文件" required>
+              <Upload {...uploadProps} listType="text" maxCount={1}>
+                <Button icon={<UploadOutlined />}>选择音频文件</Button>
               </Upload>
               <div style={{ color: '#666', fontSize: 12, marginTop: 8 }}>
                 支持 MP3、WAV、FLAC 等格式，文件大小不超过 50MB
               </div>
             </Form.Item>
           )}
-          
+
           <Form.Item
             name="title"
             label="音乐标题"
@@ -419,7 +459,7 @@ const MusicManagement: React.FC = () => {
           >
             <Input placeholder="请输入音乐标题" />
           </Form.Item>
-          
+
           <Form.Item
             name="artist"
             label="艺术家"
@@ -427,12 +467,23 @@ const MusicManagement: React.FC = () => {
           >
             <Input placeholder="请输入艺术家" />
           </Form.Item>
-          
-          <Form.Item
-            name="album"
-            label="专辑"
-          >
-            <Input placeholder="请输入专辑名称（可选）" />
+
+          <Form.Item label="封面图片">
+            <Upload {...coverUploadProps} listType="picture-card" maxCount={1}>
+              {coverFileList.length === 0 && (
+                <div>
+                  <PlusOutlined />
+                  <div style={{ marginTop: 8 }}>上传封面</div>
+                </div>
+              )}
+            </Upload>
+            <div style={{ color: '#666', fontSize: 12, marginTop: 8 }}>
+              支持 JPG、PNG 等格式，文件大小不超过 5MB
+            </div>
+          </Form.Item>
+
+          <Form.Item name="category" label="分类">
+            <Input placeholder="请输入音乐分类（可选）" />
           </Form.Item>
         </Form>
       </Modal>

@@ -173,3 +173,63 @@ export const uploadAPI = {
       },
     }),
 };
+
+export const musicAPI = {
+  // 获取音乐列表
+  getMusic: (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+  }) => api.get('/music', { params }),
+
+  // 获取单个音乐
+  getMusicById: (id: number) => api.get(`/music/${id}`),
+
+  // 创建音乐
+  createMusic: (data: {
+    title: string;
+    artist: string;
+    src: string;
+    duration?: number;
+    cover?: string;
+    category?: string;
+    description?: string;
+  }) => api.post('/music', data),
+
+  // 更新音乐
+  updateMusic: (
+    id: number,
+    data: {
+      title?: string;
+      artist?: string;
+      src?: string;
+      duration?: number;
+      cover?: string;
+      category?: string;
+      description?: string;
+    },
+  ) => api.patch(`/music/${id}`, data),
+
+  // 删除音乐
+  deleteMusic: (id: number) => api.delete(`/music/${id}`),
+
+  // 增加播放次数
+  incrementPlayCount: (id: number) => api.post(`/music/${id}/play`),
+
+  // 上传音乐文件
+  uploadMusic: (formData: FormData) =>
+    api.post('/upload/music', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
+
+  // 删除文件
+  deleteFile: (fileUrl: string) =>
+    api.delete('/upload/file', {
+      params: {
+        url: fileUrl,
+      },
+    }),
+};
