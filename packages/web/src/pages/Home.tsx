@@ -8,7 +8,6 @@ import {
   Share,
   VideoLibrary,
   Wallpaper,
-  Work,
 } from '@mui/icons-material';
 import {
   Avatar,
@@ -27,29 +26,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Image } from 'antd';
 import { worksAPI, videosAPI, galleryAPI } from '../utils/api';
-
-// 类型定义
-interface Work {
-  id: number;
-  title: string;
-  subtitle: string;
-  description: string;
-  year: string;
-  type: string;
-  poster?: string;
-  thumbnail?: string;
-  rating: number;
-}
-
-interface Video {
-  id: number;
-  title: string;
-  description: string;
-  thumbnail?: string;
-  duration: string;
-  views: number;
-  likes: number;
-}
+import { Work, Video } from '../types/home';
 
 const Home: React.FC = () => {
   const { t } = useTranslation();

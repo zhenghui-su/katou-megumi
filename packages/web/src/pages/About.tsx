@@ -1,18 +1,9 @@
 import React from 'react';
 import { Box, Typography, Container, Grid, Paper, Chip } from '@mui/material';
 import { motion } from 'framer-motion';
+import { characteristics } from '../constants/about';
 
 const About: React.FC = () => {
-	const characteristics = [
-		'温柔',
-		'善良',
-		'理解力强',
-		'支持他人',
-		'平凡中的不平凡',
-		'真诚',
-		'可靠',
-		'体贴',
-	];
 
 	return (
 		<Container maxWidth='lg' sx={{ py: 4 }}>

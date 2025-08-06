@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Box,
   Typography,
@@ -17,136 +17,24 @@ import { Image } from 'antd';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { FileUpload } from '@katou-megumi/shared';
-import { galleryAPI } from '../utils/api';
-import { useSearchParams } from 'react-router-dom';
-
-interface UploadedFile {
-  url: string;
-  fileName: string;
-  originalName: string;
-  size: number;
-  mimeType: string;
-}
-
-interface GalleryImage {
-  id: number;
-  title: string;
-  description?: string;
-  url: string;
-  thumbnailUrl?: string;
-  category: string;
-  tags?: string[];
-  views: number;
-  likes: number;
-  createdAt: string;
-  uploadedBy?: string;
-}
-
-interface CategoryInfo {
-  key: string;
-  label: string;
-  color: string;
-}
+import { useGallery } from '../hooks/useGallery';
+import { categories } from '../constants/gallery';
+import { removeFileExtension, formatDate } from '../utils/gallery';
 
 const Gallery: React.FC = () => {
   const { isAuthenticated, token, user } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const [message, setMessage] = useState<{
-    type: 'success' | 'error' | 'info';
-    text: string;
-  } | null>(null);
-  const [images, setImages] = useState<GalleryImage[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-
-  // 分类配置
-  const categories: CategoryInfo[] = [
-    { key: 'all', label: '全部', color: '#ff6b9d' },
-    { key: 'official', label: '官方图片', color: '#ff6b9d' },
-    { key: 'anime', label: '动漫截图', color: '#4a90e2' },
-    { key: 'wallpaper', label: '精美壁纸', color: '#7b68ee' },
-    { key: 'fanart', label: '同人作品', color: '#ff7043' },
-  ];
-
-  // 去除文件扩展名的函数
-  const removeFileExtension = (filename: string): string => {
-    const lastDotIndex = filename.lastIndexOf('.');
-    if (lastDotIndex === -1) return filename;
-    return filename.substring(0, lastDotIndex);
-  };
-
-  // 获取已通过审核的图片
-  const fetchImages = async (category?: string) => {
-    try {
-      setLoading(true);
-      let response;
-      if (category && category !== 'all') {
-        // 使用分类专用接口
-        response = await galleryAPI.getImagesByCategory(category);
-      } else {
-        // 获取所有图片
-        response = await galleryAPI.getImages();
-      }
-      if (response.data.success) {
-        // 处理不同接口返回的数据结构
-        const imageData =
-          response.data.data?.images || response.data.data || [];
-        setImages(imageData);
-      }
-    } catch (error) {
-      console.error('获取图片错误:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 组件加载时获取图片和处理URL参数
-  useEffect(() => {
-    const categoryFromUrl = searchParams.get('category') || 'all';
-    setSelectedCategory(categoryFromUrl);
-    fetchImages(categoryFromUrl);
-  }, [searchParams]);
-
-  // 处理分类切换
-  const handleCategoryChange = (category: string) => {
-    setSelectedCategory(category);
-    if (category === 'all') {
-      searchParams.delete('category');
-    } else {
-      searchParams.set('category', category);
-    }
-    setSearchParams(searchParams);
-    fetchImages(category);
-  };
-
-  const handleUploadSuccess = (files: UploadedFile[]) => {
-    setMessage({
-      type: 'info',
-      text: `成功上传 ${files.length} 个文件！图片已提交审核，审核通过后将显示在画廊中。`,
-    });
-    setTimeout(() => setMessage(null), 5000);
-    setUploadDialogOpen(false);
-    // 上传成功后可以选择刷新图片列表（如果需要显示最新审核通过的图片）
-    // fetchImages();
-  };
-
-  const handleUploadError = (error: string) => {
-    setMessage({
-      type: 'error',
-      text: `上传失败: ${error}`,
-    });
-    setTimeout(() => setMessage(null), 5000);
-  };
-
-  // 格式化日期
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
+  const {
+    uploadDialogOpen,
+    message,
+    images,
+    loading,
+    selectedCategory,
+    setUploadDialogOpen,
+    setMessage,
+    handleCategoryChange,
+    handleUploadSuccess,
+    handleUploadError,
+  } = useGallery();
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
