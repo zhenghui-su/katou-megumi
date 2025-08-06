@@ -87,17 +87,23 @@ export const reviewAPI = {
   // 获取审核统计
   getStats: () => api.get('/review/stats'),
 
-  // 审核图片
+  // 审核通过图片
   approveImage: (
     id: number,
     data: {
-      action: 'approve' | 'reject';
       title?: string;
       description?: string;
       category?: string;
-      reason?: string;
     },
   ) => api.post(`/review/approve/${id}`, data),
+
+  // 审核拒绝图片
+  rejectImage: (
+    id: number,
+    data: {
+      reason?: string;
+    },
+  ) => api.post(`/review/reject/${id}`, data),
 };
 
 export const notificationAPI = {

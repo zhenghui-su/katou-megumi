@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ReviewService } from './review.service';
 import { AdminGuard } from '../../guards/admin.guard';
@@ -52,8 +52,11 @@ export class ReviewController {
   @ApiResponse({ status: 401, description: '未授权' })
   @ApiResponse({ status: 403, description: '权限不足' })
   @ApiResponse({ status: 404, description: '图片不存在' })
-  async approveImage(@Param('id') id: string) {
-    const result = await this.reviewService.approveImage(parseInt(id));
+  async approveImage(
+    @Param('id') id: string,
+    @Body() updateData?: { title?: string; description?: string; category?: string }
+  ) {
+    const result = await this.reviewService.approveImage(parseInt(id), updateData);
     
     return {
       success: true,
@@ -68,8 +71,11 @@ export class ReviewController {
   @ApiResponse({ status: 401, description: '未授权' })
   @ApiResponse({ status: 403, description: '权限不足' })
   @ApiResponse({ status: 404, description: '图片不存在' })
-  async rejectImage(@Param('id') id: string) {
-    const result = await this.reviewService.rejectImage(parseInt(id));
+  async rejectImage(
+    @Param('id') id: string,
+    @Body() rejectData?: { reason?: string }
+  ) {
+    const result = await this.reviewService.rejectImage(parseInt(id), rejectData?.reason);
     
     return {
       success: true,

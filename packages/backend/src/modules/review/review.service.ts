@@ -46,7 +46,7 @@ export class ReviewService {
         mimeType: img.mimeType,
         status: img.status,
         rejectReason: img.rejectReason,
-        user: {
+        uploader: {
           id: img.user.id,
           username: img.user.username,
           email: img.user.email,
@@ -78,7 +78,7 @@ export class ReviewService {
   }
 
   // 批准图片
-  async approveImage(id: number) {
+  async approveImage(id: number, updateData?: { title?: string; description?: string; category?: string }) {
     const pendingImage = await this.pendingImageRepository.findOne({
       where: { id },
       relations: ['user'],
@@ -90,6 +90,20 @@ export class ReviewService {
 
     if (pendingImage.status !== 'pending') {
       throw new BadRequestException('图片已经被审核过了');
+    }
+
+    // 如果有更新数据，先更新待审核图片的信息
+    if (updateData) {
+      if (updateData.title) {
+        pendingImage.title = updateData.title;
+      }
+      if (updateData.description) {
+        pendingImage.description = updateData.description;
+      }
+      if (updateData.category) {
+        pendingImage.category = updateData.category as 'official' | 'anime' | 'wallpaper' | 'fanart';
+      }
+      await this.pendingImageRepository.save(pendingImage);
     }
 
     // 创建正式图片记录

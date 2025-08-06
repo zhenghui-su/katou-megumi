@@ -82,12 +82,15 @@ export class UploadService {
 		// 生成临时访问URL（本地文件服务）
 		const tempFileUrl = `http://localhost:8080/temp/pending-images/${fileName}`;
 
+		// 处理中文文件名
+		const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+
 		// 保存到待审核表
 		const pendingImage = this.pendingImageRepository.create({
-			title: file.originalname,
+			title: originalName,
 			url: tempFileUrl,
 			category: category as 'official' | 'anime' | 'wallpaper' | 'fanart',
-			originalFilename: file.originalname,
+			originalFilename: originalName,
 			fileSize: file.size,
 			mimeType: file.mimetype,
 			userId: userId,
@@ -99,7 +102,7 @@ export class UploadService {
 
 		return {
 			fileName: fileName,
-			originalName: file.originalname,
+			originalName: originalName,
 			size: file.size,
 			mimeType: file.mimetype,
 			status: 'pending',
@@ -154,12 +157,15 @@ export class UploadService {
 			// 生成临时访问URL（本地文件服务）
 			const tempFileUrl = `http://localhost:8080/temp/pending-images/${fileName}`;
 
+			// 处理中文文件名
+			const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+
 			// 保存到待审核表
 			const pendingImage = this.pendingImageRepository.create({
-				title: file.originalname,
+				title: originalName,
 				url: tempFileUrl,
 				category: category as 'official' | 'anime' | 'wallpaper' | 'fanart',
-				originalFilename: file.originalname,
+				originalFilename: originalName,
 				fileSize: file.size,
 				mimeType: file.mimetype,
 				userId: userId,
@@ -171,7 +177,7 @@ export class UploadService {
 
 			uploadResults.push({
 				fileName: fileName,
-				originalName: file.originalname,
+				originalName: originalName,
 				size: file.size,
 				mimeType: file.mimetype,
 				status: 'pending',

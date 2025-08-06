@@ -101,11 +101,20 @@ const FileUpload: React.FC<FileUploadProps> = ({
 	};
 
 	const formatFileName = (fileName: string): string => {
-		if (showFileExtension) {
-			return fileName;
+		// 解码URL编码的文件名以正确显示中文
+		let decodedName = fileName;
+		try {
+			decodedName = decodeURIComponent(fileName);
+		} catch (e) {
+			// 如果解码失败，使用原文件名
+			decodedName = fileName;
 		}
-		const lastDotIndex = fileName.lastIndexOf('.');
-		return lastDotIndex > 0 ? fileName.substring(0, lastDotIndex) : fileName;
+		
+		if (showFileExtension) {
+			return decodedName;
+		}
+		const lastDotIndex = decodedName.lastIndexOf('.');
+		return lastDotIndex > 0 ? decodedName.substring(0, lastDotIndex) : decodedName;
 	};
 
 	// 验证文件
@@ -564,7 +573,12 @@ const FileUpload: React.FC<FileUploadProps> = ({
 							startIcon={<Upload />}
 							onClick={confirmUpload}
 							disabled={uploading}
-							sx={{ minWidth: 120 }}
+							sx={{ 
+								minWidth: 150, 
+								height: 48,
+								fontSize: '1rem',
+								fontWeight: 'bold'
+							}}
 						>
 							{uploading ? '上传中...' : '确认上传'}
 						</Button>
@@ -573,7 +587,11 @@ const FileUpload: React.FC<FileUploadProps> = ({
 							color='secondary'
 							onClick={clearSelectedFiles}
 							disabled={uploading}
-							sx={{ minWidth: 120 }}
+							sx={{ 
+								minWidth: 120,
+								height: 48,
+								fontSize: '1rem'
+							}}
 						>
 							清空
 						</Button>
@@ -600,7 +618,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
 							>
 								<CheckCircle color='success' sx={{ mr: 2 }} />
 								<ListItemText
-									primary={file.originalName}
+									primary={formatFileName(file.originalName)}
 									secondary={`${formatFileSize(file.size)} • ${file.mimeType}`}
 								/>
 								<ListItem

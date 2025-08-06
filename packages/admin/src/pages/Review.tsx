@@ -28,6 +28,7 @@ import {
   ClockCircleOutlined,
 } from '@ant-design/icons';
 import { reviewAPI } from '../utils/api';
+import './ReviewCard.css';
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -43,6 +44,10 @@ interface PendingImage {
   createdAt: string;
   url: string;
   userId: number;
+  uploader?: {
+    id: number;
+    username: string;
+  };
 }
 
 interface ReviewForm {
@@ -103,13 +108,17 @@ const Review: React.FC = () => {
     }
 
     try {
-      await reviewAPI.approveImage(selectedImage.id, {
-        action: reviewForm.action,
-        title: reviewForm.title,
-        description: reviewForm.description,
-        category: reviewForm.category,
-        reason: reviewForm.reason,
-      });
+      if (reviewForm.action === 'approve') {
+        await reviewAPI.approveImage(selectedImage.id, {
+          title: reviewForm.title,
+          description: reviewForm.description,
+          category: reviewForm.category,
+        });
+      } else {
+        await reviewAPI.rejectImage(selectedImage.id, {
+          reason: reviewForm.reason,
+        });
+      }
 
       message.success(
         reviewForm.action === 'approve' ? '审核通过' : '审核拒绝',
@@ -134,17 +143,6 @@ const Review: React.FC = () => {
       reason: '',
     });
     setReviewDialogOpen(true);
-  };
-
-
-
-  const getStatusText = (status: string) => {
-    const statusMap: { [key: string]: { text: string; color: string } } = {
-      pending: { text: '待审核', color: 'orange' },
-      approved: { text: '已通过', color: 'green' },
-      rejected: { text: '已拒绝', color: 'red' },
-    };
-    return statusMap[status] || { text: '未知', color: 'default' };
   };
 
   const getCategoryText = (category: string) => {
@@ -307,9 +305,8 @@ const Review: React.FC = () => {
           ) : (
             <Row gutter={[16, 16]}>
               {images.map((image) => {
-                const status = getStatusText(image.status);
                 return (
-                  <Col xs={24} sm={12} md={8} lg={6} xl={4} key={image.id}>
+                  <Col xs={24} sm={12} md={8} lg={6} xl={6} key={image.id}>
                     <Card
                       hoverable
                       style={{
@@ -319,6 +316,7 @@ const Review: React.FC = () => {
                         transition: 'all 0.3s ease',
                         position: 'relative',
                       }}
+                      className="review-card-actions"
                       onMouseEnter={(e) => {
                         e.currentTarget.style.transform = 'translateY(-8px)';
                         e.currentTarget.style.boxShadow =
@@ -377,35 +375,64 @@ const Review: React.FC = () => {
                         tabValue === 'pending'
                           ? [
                               <Tooltip title="通过" key="approve">
-                                <Button
-                                  type="text"
-                                  icon={<CheckCircleOutlined />}
+                                <span
                                   onClick={() =>
                                     openReviewDialog(image, 'approve')
                                   }
                                   style={{
-                                    borderRadius: 8,
                                     color: '#10b981',
+                                    fontSize: 20,
+                                    height: '45px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                    borderRadius: '0 0 0 16px',
                                   }}
-                                />
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor =
+                                      '#f0fdf4';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor =
+                                      'transparent';
+                                  }}
+                                >
+                                  <CheckCircleOutlined />
+                                </span>
                               </Tooltip>,
                               <Tooltip title="拒绝" key="reject">
-                                <Button
-                                  type="text"
-                                  icon={<CloseCircleOutlined />}
+                                <span
                                   onClick={() =>
                                     openReviewDialog(image, 'reject')
                                   }
                                   style={{
-                                    borderRadius: 8,
                                     color: '#ef4444',
+                                    fontSize: 20,
+                                    height: '45px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                    borderRadius: '0 0 16px 0',
                                   }}
-                                />
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor =
+                                      '#fef2f2';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor =
+                                      'transparent';
+                                  }}
+                                >
+                                  <CloseCircleOutlined />
+                                </span>
                               </Tooltip>,
                             ]
                           : []
                       }
-                      styles={{ body: { padding: 16 } }}
                     >
                       <Card.Meta
                         title={
@@ -418,63 +445,96 @@ const Review: React.FC = () => {
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
                               whiteSpace: 'nowrap',
+                              textAlign: 'center',
                             }}
                           >
-                            {image.originalFilename.replace(/\.[^/.]+$/, '')}
+                            {decodeURIComponent(
+                              image.originalFilename.replace(/\.[^/.]+$/, ''),
+                            )}
                           </div>
                         }
                         description={
-                          <div style={{ padding: '8px 0' }}>
+                          <div style={{ padding: '4px 0 8px 0' }}>
                             <div
                               style={{
                                 display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                marginBottom: 8,
+                                flexDirection: 'column',
+                                gap: 8,
                               }}
                             >
                               <div
                                 style={{
                                   display: 'flex',
-                                  gap: 6,
                                   alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  width: '100%',
                                 }}
                               >
-                                {tabValue === 'pending' && (
-                                  <Tag
-                                    color={status.color}
-                                    style={{
-                                      borderRadius: 8,
-                                      padding: '2px 6px',
-                                      fontSize: 11,
-                                      fontWeight: 500,
-                                      margin: 0,
-                                    }}
-                                  >
-                                    {status.text}
-                                  </Tag>
-                                )}
                                 <Tag
                                   style={{
-                                    borderRadius: 8,
-                                    padding: '2px 6px',
-                                    fontSize: 11,
+                                    borderRadius: 6,
+                                    padding: '2px 8px',
+                                    fontSize: 14,
                                     border: 'none',
                                     margin: 0,
+                                    fontWeight: 500,
                                     ...getCategoryStyle(image.category),
                                   }}
                                 >
                                   {getCategoryText(image.category)}
                                 </Tag>
+                                <Text
+                                  type="secondary"
+                                  style={{
+                                    fontSize: 14,
+                                    color: '#9ca3af',
+                                    lineHeight: 1.2,
+                                  }}
+                                >
+                                  {new Date(
+                                    image.createdAt || image.reviewedAt,
+                                  ).toLocaleString('zh-CN', {
+                                    month: '2-digit',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </Text>
                               </div>
-                              <Text
-                                type="secondary"
-                                style={{ fontSize: 11, color: '#9ca3af' }}
-                              >
-                                {new Date(
-                                  image.reviewedAt,
-                                ).toLocaleDateString()}
-                              </Text>
+                              {image.uploader && (
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 6,
+                                    padding: '4px 8px',
+                                    backgroundColor: '#f9fafb',
+                                    borderRadius: 6,
+                                    border: '1px solid #f3f4f6',
+                                  }}
+                                >
+                                  <Text
+                                    type="secondary"
+                                    style={{
+                                      fontSize: 14,
+                                      color: '#6b7280',
+                                      lineHeight: 1.2,
+                                    }}
+                                  >
+                                    上传者:
+                                  </Text>
+                                  <Text
+                                    style={{
+                                      fontSize: 14,
+                                      color: '#374151',
+                                      fontWeight: 500,
+                                      lineHeight: 1.2,
+                                    }}
+                                  >
+                                    {image.uploader.username}
+                                  </Text>
+                                </div>
+                              )}
                             </div>
                           </div>
                         }
@@ -573,8 +633,6 @@ const Review: React.FC = () => {
           )}
         </Form>
       </Modal>
-
-
     </div>
   );
 };
