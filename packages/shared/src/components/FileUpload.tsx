@@ -9,18 +9,26 @@ import {
 	List,
 	ListItem,
 	ListItemText,
-	ListItemSecondaryAction,
+	// 使用 ListItem 的 secondaryAction prop 替代已弃用的 ListItemSecondaryAction
 	FormControl,
 	InputLabel,
 	Select,
 	MenuItem,
+	Button,
+	Card,
+	CardMedia,
+	Tooltip,
 } from '@mui/material';
+
 import {
 	CloudUpload,
 	Delete,
 	CheckCircle,
 	Error as ErrorIcon,
+	Upload,
+	Close,
 } from '@mui/icons-material';
+import '@ant-design/v5-patch-for-react-19';
 
 interface UploadedFile {
 	url: string;
@@ -28,6 +36,11 @@ interface UploadedFile {
 	originalName: string;
 	size: number;
 	mimeType: string;
+}
+
+interface SelectedFile {
+	file: File;
+	previewUrl?: string;
 }
 
 interface FileUploadProps {
@@ -40,6 +53,13 @@ interface FileUploadProps {
 	apiUrl?: string;
 	showCategorySelect?: boolean;
 	defaultCategory?: 'official' | 'anime' | 'wallpaper' | 'fanart';
+	maxFiles?: number; // 最大文件数量
+	width?: string | number; // 组件宽度
+	height?: string | number; // 组件高度
+	previewImageHeight?: number; // 预览图片高度
+	showFileInfo?: boolean; // 是否显示文件信息
+	showFileExtension?: boolean; // 是否显示文件后缀
+	customDeleteIcon?: React.ReactNode; // 自定义删除按钮图标
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
@@ -52,12 +72,19 @@ const FileUpload: React.FC<FileUploadProps> = ({
 	apiUrl = 'http://localhost:8080/api/upload',
 	showCategorySelect = false,
 	defaultCategory = 'fanart',
+	maxFiles = 10,
+	width = '100%',
+	height = 'auto',
+	previewImageHeight = 120,
+	showFileInfo = true,
+	showFileExtension = true,
+	customDeleteIcon,
 }) => {
-	// const { t } = useTranslation();
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [uploading, setUploading] = useState(false);
 	const [_uploadProgress, setUploadProgress] = useState(0);
 	const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+	const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
 	const [error, setError] = useState<string | null>(null);
 	const [dragOver, setDragOver] = useState(false);
 	const [selectedCategory, setSelectedCategory] = useState<
@@ -71,6 +98,14 @@ const FileUpload: React.FC<FileUploadProps> = ({
 		const sizes = ['Bytes', 'KB', 'MB', 'GB'];
 		const i = Math.floor(Math.log(bytes) / Math.log(k));
 		return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+	};
+
+	const formatFileName = (fileName: string): string => {
+		if (showFileExtension) {
+			return fileName;
+		}
+		const lastDotIndex = fileName.lastIndexOf('.');
+		return lastDotIndex > 0 ? fileName.substring(0, lastDotIndex) : fileName;
 	};
 
 	// 验证文件
@@ -172,11 +207,47 @@ const FileUpload: React.FC<FileUploadProps> = ({
 	const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const files = event.target.files;
 		if (files && files.length > 0) {
-			uploadFiles(files);
+			addSelectedFiles(files);
 		}
 		// 清空input值，允许重复选择同一文件
 		if (fileInputRef.current) {
 			fileInputRef.current.value = '';
+		}
+	};
+
+	// 添加选中的文件
+	const addSelectedFiles = (files: FileList) => {
+		setError(null);
+		const newSelectedFiles: SelectedFile[] = [];
+
+		// 检查是否超过最大数量限制
+		if (selectedFiles.length + files.length > maxFiles) {
+			setError(`最多只能选择${maxFiles}张图片`);
+			return;
+		}
+
+		for (let i = 0; i < files.length; i++) {
+			const file = files[i];
+			const validationError = validateFile(file);
+			if (validationError) {
+				setError(validationError);
+				return;
+			}
+
+			// 为图片文件创建预览URL
+			let previewUrl: string | undefined;
+			if (file.type.startsWith('image/')) {
+				previewUrl = URL.createObjectURL(file);
+			}
+
+			newSelectedFiles.push({ file, previewUrl });
+		}
+
+		if (multiple) {
+			setSelectedFiles((prev) => [...prev, ...newSelectedFiles]);
+		} else {
+			// 单文件模式，替换之前的文件
+			setSelectedFiles(newSelectedFiles);
 		}
 	};
 
@@ -196,13 +267,55 @@ const FileUpload: React.FC<FileUploadProps> = ({
 		setDragOver(false);
 		const files = event.dataTransfer.files;
 		if (files && files.length > 0) {
-			uploadFiles(files);
+			addSelectedFiles(files);
 		}
+	};
+
+	// 删除选中的文件
+	const removeSelectedFile = (index: number) => {
+		setSelectedFiles((prev) => {
+			const newFiles = prev.filter((_, i) => i !== index);
+			// 释放预览URL
+			if (prev[index].previewUrl) {
+				URL.revokeObjectURL(prev[index].previewUrl!);
+			}
+			return newFiles;
+		});
 	};
 
 	// 删除已上传的文件
 	const removeUploadedFile = (index: number) => {
 		setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+	};
+
+	// 确认上传选中的文件
+	const confirmUpload = async () => {
+		if (selectedFiles.length === 0) return;
+
+		const fileList = new DataTransfer();
+		selectedFiles.forEach(({ file }) => {
+			fileList.items.add(file);
+		});
+
+		await uploadFiles(fileList.files);
+
+		// 清空选中的文件并释放预览URL
+		selectedFiles.forEach(({ previewUrl }) => {
+			if (previewUrl) {
+				URL.revokeObjectURL(previewUrl);
+			}
+		});
+		setSelectedFiles([]);
+	};
+
+	// 清空所有选中的文件
+	const clearSelectedFiles = () => {
+		selectedFiles.forEach(({ previewUrl }) => {
+			if (previewUrl) {
+				URL.revokeObjectURL(previewUrl);
+			}
+		});
+		setSelectedFiles([]);
 	};
 
 	// 打开文件选择器
@@ -211,7 +324,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
 	};
 
 	return (
-		<Box sx={{ width: '100%', maxWidth: 600 }}>
+		<Box sx={{ width, height, mx: 'auto', p: 2 }}>
 			{/* 分类选择器 */}
 			{showCategorySelect && (
 				<FormControl fullWidth sx={{ mb: 2 }}>
@@ -234,55 +347,57 @@ const FileUpload: React.FC<FileUploadProps> = ({
 				</FormControl>
 			)}
 
-			{/* 上传区域 */}
-			<Box
-				onClick={openFileSelector}
-				onDragOver={handleDragOver}
-				onDragLeave={handleDragLeave}
-				onDrop={handleDrop}
-				sx={{
-					border: 2,
-					borderColor: dragOver ? 'primary.main' : 'grey.300',
-					borderStyle: 'dashed',
-					borderRadius: 2,
-					p: 4,
-					textAlign: 'center',
-					cursor: uploading ? 'not-allowed' : 'pointer',
-					backgroundColor: dragOver ? 'primary.light' : 'grey.50',
-					transition: 'all 0.3s ease',
-					'&:hover': {
-						borderColor: 'primary.main',
-						backgroundColor: 'primary.light',
-					},
-					opacity: uploading ? 0.6 : 1,
-				}}
-			>
-				<CloudUpload
+			{/* 上传区域 - 只在没有选中文件时显示 */}
+			{selectedFiles.length === 0 && (
+				<Box
+					onClick={openFileSelector}
+					onDragOver={handleDragOver}
+					onDragLeave={handleDragLeave}
+					onDrop={handleDrop}
 					sx={{
-						fontSize: 48,
-						color: 'primary.main',
-						mb: 2,
+						border: 2,
+						borderColor: dragOver ? 'primary.main' : 'grey.300',
+						borderStyle: 'dashed',
+						borderRadius: 2,
+						p: 3,
+						textAlign: 'center',
+						cursor: uploading ? 'not-allowed' : 'pointer',
+						backgroundColor: dragOver ? 'primary.light' : 'grey.50',
+						transition: 'all 0.3s ease',
+						'&:hover': {
+							borderColor: 'primary.main',
+							backgroundColor: 'primary.light',
+						},
+						opacity: uploading ? 0.6 : 1,
 					}}
-				/>
-				<Typography variant='h6' gutterBottom>
-					{uploading ? '上传中...' : '点击或拖拽文件到此处'}
-				</Typography>
-				<Typography variant='body2' color='text.secondary'>
-					支持 {acceptedTypes.join(', ')} 格式
-				</Typography>
-				<Typography variant='body2' color='text.secondary'>
-					最大文件大小: {formatFileSize(maxFileSize)}
-				</Typography>
-				{multiple && (
-					<Chip
-						label='支持多文件上传'
-						size='small'
-						color='primary'
-						variant='outlined'
-						sx={{ mt: 1 }}
+				>
+					<CloudUpload
+						sx={{
+							fontSize: 40,
+							color: 'primary.main',
+							mb: 1,
+						}}
 					/>
-				)}
-			</Box>
+					<Typography variant='h6' gutterBottom>
+						{uploading ? '上传中...' : '点击或拖拽文件到此处'}
+					</Typography>
+					<Typography variant='body2' color='text.secondary'>
+						支持 {acceptedTypes.join(', ')} 格式
+					</Typography>
+					<Typography variant='body2' color='text.secondary'>
+						最大文件大小: {formatFileSize(maxFileSize)}
+					</Typography>
+					{multiple && (
+						<Chip
+							label='支持多文件上传'
+							size='small'
+							color='primary'
+							variant='outlined'
+							sx={{ mt: 1 }}
+						/>
+					)}
+				</Box>
+			)}
 
 			{/* 隐藏的文件输入 */}
 			<input
@@ -325,6 +440,147 @@ const FileUpload: React.FC<FileUploadProps> = ({
 				</Alert>
 			)}
 
+			{/* 选中文件预览 */}
+			{selectedFiles.length > 0 && (
+				<Box sx={{ mt: 3 }}>
+					<Typography variant='h6' gutterBottom>
+						已选择文件 ({selectedFiles.length}/{maxFiles})
+					</Typography>
+					<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
+						{selectedFiles.map((selectedFile, index) => (
+							<Box
+								key={index}
+								sx={{
+									width: {
+										xs: 'calc(50% - 8px)',
+										sm: 'calc(33.33% - 11px)',
+										md: 'calc(25% - 12px)',
+									},
+								}}
+							>
+								<Card sx={{ position: 'relative' }}>
+									{selectedFile.previewUrl ? (
+										showFileInfo ? (
+											<Tooltip
+												title={`${formatFileName(
+													selectedFile.file.name
+												)} (${formatFileSize(selectedFile.file.size)})`}
+											>
+												<CardMedia
+													component='img'
+													image={selectedFile.previewUrl}
+													alt={selectedFile.file.name}
+													sx={{
+														height: previewImageHeight,
+														objectFit: 'cover',
+													}}
+												/>
+											</Tooltip>
+										) : (
+											<CardMedia
+												component='img'
+												image={selectedFile.previewUrl}
+												alt={selectedFile.file.name}
+												sx={{
+													height: previewImageHeight,
+													objectFit: 'cover',
+												}}
+											/>
+										)
+									) : (
+										<Box
+											sx={{
+												height: previewImageHeight,
+												display: 'flex',
+												alignItems: 'center',
+												justifyContent: 'center',
+												backgroundColor: 'grey.100',
+											}}
+										>
+											<Typography variant='body2' color='text.secondary'>
+												{selectedFile.file.name}
+											</Typography>
+										</Box>
+									)}
+									<IconButton
+										size='small'
+										color='error'
+										onClick={() => removeSelectedFile(index)}
+										sx={{
+											position: 'absolute',
+											top: 4,
+											right: 4,
+											backgroundColor: 'rgba(255, 255, 255, 0.8)',
+											'&:hover': {
+												backgroundColor: 'rgba(255, 255, 255, 0.9)',
+											},
+										}}
+									>
+										{customDeleteIcon || <Close fontSize='small' />}
+									</IconButton>
+								</Card>
+							</Box>
+						))}
+						{/* 添加更多图片按钮 */}
+						{selectedFiles.length < maxFiles && (
+							<Box
+								sx={{
+									width: {
+										xs: 'calc(50% - 8px)',
+										sm: 'calc(33.33% - 11px)',
+										md: 'calc(25% - 12px)',
+									},
+								}}
+							>
+								<Card
+									onClick={openFileSelector}
+									sx={{
+										height: previewImageHeight,
+										display: 'flex',
+										alignItems: 'center',
+										justifyContent: 'center',
+										backgroundColor: 'grey.100',
+										cursor: 'pointer',
+										border: 2,
+										borderStyle: 'dashed',
+										borderColor: 'grey.300',
+										'&:hover': {
+											borderColor: 'primary.main',
+											backgroundColor: 'primary.light',
+										},
+									}}
+								>
+									<Typography variant='h3' color='primary.main'>
+										+
+									</Typography>
+								</Card>
+							</Box>
+						)}
+					</Box>
+					<Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+						<Button
+							variant='contained'
+							color='primary'
+							startIcon={<Upload />}
+							onClick={confirmUpload}
+							disabled={uploading}
+							sx={{ minWidth: 120 }}
+						>
+							{uploading ? '上传中...' : '确认上传'}
+						</Button>
+						<Button
+							variant='outlined'
+							color='secondary'
+							onClick={clearSelectedFiles}
+							disabled={uploading}
+							sx={{ minWidth: 120 }}
+						>
+							清空
+						</Button>
+					</Box>
+				</Box>
+			)}
+
 			{/* 已上传文件列表 */}
 			{uploadedFiles.length > 0 && (
 				<Box sx={{ mt: 3 }}>
@@ -347,15 +603,17 @@ const FileUpload: React.FC<FileUploadProps> = ({
 									primary={file.originalName}
 									secondary={`${formatFileSize(file.size)} • ${file.mimeType}`}
 								/>
-								<ListItemSecondaryAction>
-									<IconButton
-										edge='end'
-										color='error'
-										onClick={() => removeUploadedFile(index)}
-									>
-										<Delete />
-									</IconButton>
-								</ListItemSecondaryAction>
+								<ListItem
+									secondaryAction={
+										<IconButton
+											edge='end'
+											color='error'
+											onClick={() => removeUploadedFile(index)}
+										>
+											<Delete />
+										</IconButton>
+									}
+								/>
 							</ListItem>
 						))}
 					</List>
