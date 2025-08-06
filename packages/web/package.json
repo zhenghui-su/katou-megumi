@@ -12,11 +12,13 @@
 		"clean": "rm -rf dist node_modules"
 	},
 	"dependencies": {
+		"@ant-design/v5-patch-for-react-19": "^1.0.3",
 		"@emotion/react": "^11.14.0",
 		"@emotion/styled": "^11.14.1",
 		"@katou-megumi/shared": "workspace:*",
 		"@mui/icons-material": "^7.2.0",
 		"@mui/material": "^7.2.0",
+		"antd": "^5.26.7",
 		"axios": "^1.11.0",
 		"framer-motion": "^12.23.9",
 		"i18next": "^25.3.2",
