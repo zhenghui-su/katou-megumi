@@ -33,7 +33,9 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('admin_token');
       localStorage.removeItem('admin_user');
-      window.location.href = '/';
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 1000);
     }
     return Promise.reject(error);
   },

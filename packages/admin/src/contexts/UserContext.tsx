@@ -43,17 +43,29 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   };
 
   const fetchUserProfile = async () => {
+    const token = localStorage.getItem('admin_token');
+    if (!token) {
+      setUserProfile(null);
+      return;
+    }
+
     try {
       const response = await authAPI.getProfile();
       const profile = response.data.data;
       setUserProfile(profile);
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
+      // 如果获取失败，清除用户信息
+      setUserProfile(null);
     }
   };
 
   useEffect(() => {
-    fetchUserProfile();
+    // 只在有token时才获取用户信息
+    const token = localStorage.getItem('admin_token');
+    if (token) {
+      fetchUserProfile();
+    }
   }, []);
 
   const value = {
