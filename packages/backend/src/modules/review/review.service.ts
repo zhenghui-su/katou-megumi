@@ -99,6 +99,7 @@ export class ReviewService {
       url: pendingImage.url,
       category: pendingImage.category,
       tags: pendingImage.tags,
+      uploadedBy: pendingImage.user?.username || '未知用户',
     });
 
     await this.imageRepository.save(image);

@@ -29,6 +29,9 @@ export class Image {
 	@Column({ type: 'int', default: 0 })
 	likes!: number;
 
+	@Column({ type: 'varchar', length: 100, nullable: true, name: 'uploaded_by' })
+	uploadedBy?: string;
+
 	@CreateDateColumn({ name: 'created_at' })
 	createdAt!: Date;
 
