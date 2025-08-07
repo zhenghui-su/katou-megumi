@@ -43,18 +43,6 @@ const Gallery: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
       >
-        <Typography variant="h2" component="h1" align="center" sx={{ mb: 2 }}>
-          加藤惠画廊
-        </Typography>
-        <Typography
-          variant="h6"
-          align="center"
-          color="text.secondary"
-          sx={{ mb: 4 }}
-        >
-          收录加藤惠的精美图片集合
-        </Typography>
-
         {/* 分类筛选 */}
         <Box
           sx={{

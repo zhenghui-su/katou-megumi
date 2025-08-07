@@ -24,9 +24,9 @@ import { motion } from 'framer-motion';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Image } from 'antd';
-import { worksAPI, videosAPI, galleryAPI } from '../utils/api';
 import { Work, Video } from '../types/home';
+import { fetchHomeData } from '../services/dataService';
+import { downloadImage } from '../utils/download';
 
 const Home: React.FC = () => {
   const { t } = useTranslation();
@@ -45,96 +45,25 @@ const Home: React.FC = () => {
     'https://chen-1320883525.cos.ap-chengdu.myqcloud.com/images/official/1753844239669_unol2e.jpg'
   );
 
-  // 下载图片函数
-  const downloadImage = async (
-    imageUrl: string,
-    filename: string = 'wallpaper.jpg'
-  ) => {
+
+
+  // 数据加载函数
+  const loadData = async () => {
+    setLoading(true);
     try {
-      // 创建一个隐藏的iframe来下载图片，避免CORS问题
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.src = imageUrl;
-      document.body.appendChild(iframe);
-
-      // 延迟移除iframe
-      setTimeout(() => {
-        document.body.removeChild(iframe);
-      }, 1000);
-
-      // 同时尝试直接下载
-      const link = document.createElement('a');
-      link.href = imageUrl;
-      link.download = filename;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-
-      // 添加到DOM并点击
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const { works, videos, previewImages } = await fetchHomeData();
+      setWorks(works);
+      setVideos(videos);
+      setPreviewImages(previewImages);
     } catch (error) {
-      console.error('下载图片失败:', error);
-      // 备用方案：直接打开图片链接让用户手动保存
-      window.open(imageUrl, '_blank');
-    }
-  };
-
-  // API 调用函数
-  const fetchWorks = async () => {
-    try {
-      const response = await worksAPI.getWorks();
-      setWorks(response.data.data.works || []);
-    } catch (error) {
-      console.error('获取作品数据失败:', error);
-    }
-  };
-
-  const fetchVideos = async () => {
-    try {
-      const response = await videosAPI.getVideos();
-      setVideos(response.data.data.videos || []);
-    } catch (error) {
-      console.error('获取视频数据失败:', error);
-    }
-  };
-
-  // 获取预览图片
-  const fetchPreviewImages = async () => {
-    try {
-      const categories = ['official', 'anime', 'wallpaper', 'fanart'];
-      const imagePromises = categories.map(async (category) => {
-        try {
-          const response = await galleryAPI.getImages({ category, limit: 1 });
-          if (response.data.success && response.data.data.length > 0) {
-            return { category, url: response.data.data[0].url };
-          }
-        } catch (error) {
-          console.error(`获取${category}分类图片失败:`, error);
-        }
-        return { category, url: null };
-      });
-
-      const results = await Promise.all(imagePromises);
-      const imageMap: any = {};
-      results.forEach(({ category, url }) => {
-        if (url) {
-          imageMap[category] = url;
-        }
-      });
-      setPreviewImages(imageMap);
-    } catch (error) {
-      console.error('获取预览图片失败:', error);
+      console.error('加载数据失败:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   // 组件挂载时获取数据
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      await Promise.all([fetchWorks(), fetchVideos(), fetchPreviewImages()]);
-      setLoading(false);
-    };
     loadData();
   }, []);
 
@@ -145,7 +74,7 @@ const Home: React.FC = () => {
         sx={{
           background:
             'linear-gradient(135deg, #ffb3d9 0%, #ffc1e3 50%, #ffe0f0 100%)',
-          minHeight: '100vh',
+          minHeight: 'calc(100vh - 140px)', // 减去header和footer的高度
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -176,7 +105,7 @@ const Home: React.FC = () => {
 
         <Container
           maxWidth="lg"
-          sx={{ height: '100vh', display: 'flex', alignItems: 'center' }}
+          sx={{ minHeight: 'calc(100vh - 140px)', display: 'flex', alignItems: 'center', py: 4 }}
         >
           <Box
             sx={{
@@ -344,7 +273,7 @@ const Home: React.FC = () => {
                     },
                   }}
                 >
-                  <Image
+                  <img
                     src={currentImageUrl}
                     alt="加藤惠预览图"
                     height={500}
@@ -354,21 +283,6 @@ const Home: React.FC = () => {
                       cursor: 'pointer',
                       transition: 'transform 0.3s ease',
                       objectFit: 'cover',
-                    }}
-                    preview={{
-                      mask: (
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'white',
-                            fontSize: '16px',
-                          }}
-                        >
-                          点击预览
-                        </Box>
-                      ),
                     }}
                   />
                 </Box>

@@ -3,7 +3,7 @@ import { Box, Typography, Container, Button } from '@mui/material';
 
 const Footer: React.FC = () => {
 	return (
-		<Box sx={{ backgroundColor: '#2c3e50', color: 'white', py: 6, mt: 8 }}>
+			<Box sx={{ backgroundColor: '#2c3e50', color: 'white', py: 4, mt: 2 }}>
 			<Container maxWidth='lg'>
 				<Box
 					sx={{
