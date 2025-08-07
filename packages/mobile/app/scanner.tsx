@@ -4,7 +4,6 @@ import {
 	Text,
 	StyleSheet,
 	TouchableOpacity,
-	Alert,
 	Dimensions,
 	Modal,
 	Animated,
@@ -16,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { apiMethods } from '@/utils/api';
+import CustomAlert from '@/components/CustomAlert';
 
 const { width } = Dimensions.get('window');
 const scanAreaSize = width * 0.7;
@@ -83,7 +83,7 @@ export default function ScannerScreen() {
 			handleLoginQR(data);
 		} else {
 			// 其他二维码
-			Alert.alert('扫描结果', `类型: ${type}\n内容: ${data}`, [
+			CustomAlert.info('扫描结果', `类型: ${type}\n内容: ${data}`, [
 				{
 					text: '确定',
 					onPress: () => setScanned(false),
@@ -211,30 +211,23 @@ export default function ScannerScreen() {
 		try {
 			const token = await AsyncStorage.getItem('userToken');
 			if (!token) {
-				Alert.alert('错误', '用户token不存在');
+				CustomAlert.error('错误', '用户token不存在');
 				return;
 			}
 
 			const response = await apiMethods.confirmQrLogin(confirmData.qrCodeId);
 
 			if (response.status === 200 || response.status === 201) {
-				Alert.alert('成功', '网页端登录成功！', [
-					{
-						text: '确定',
-						onPress: () => {
-							closeConfirmModal();
-							router.push('/(tabs)/profile');
-						},
-					},
-				]);
+				closeConfirmModal();
+				router.push('/(tabs)/profile');
 			} else {
-				Alert.alert('登录失败', '确认登录失败');
+				CustomAlert.error('登录失败', '确认登录失败');
 			}
 		} catch (error: any) {
 			console.error('确认登录错误:', error);
 			const errorMessage =
 				error.response?.data?.message || '网络请求失败，请检查网络连接';
-			Alert.alert('错误', errorMessage);
+			CustomAlert.error('错误', errorMessage);
 		} finally {
 			setIsConfirming(false);
 		}

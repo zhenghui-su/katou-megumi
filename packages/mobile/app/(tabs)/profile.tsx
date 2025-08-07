@@ -4,7 +4,6 @@ import {
 	Text,
 	StyleSheet,
 	TouchableOpacity,
-	Alert,
 	ScrollView,
 	Image,
 } from 'react-native';
@@ -15,6 +14,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useCallback } from 'react';
+import CustomAlert from '@/components/CustomAlert';
 
 interface UserInfo {
 	id: string;
@@ -72,7 +72,7 @@ export default function ProfileScreen() {
 	};
 
 	const handleLogout = async () => {
-		Alert.alert('确认退出', '您确定要退出登录吗？', [
+		CustomAlert.warning('确认退出', '您确定要退出登录吗？', [
 			{ text: '取消', style: 'cancel' },
 			{
 				text: '确定',
@@ -84,6 +84,7 @@ export default function ProfileScreen() {
 						setUserInfo(null);
 					} catch (error) {
 						console.error('退出登录失败:', error);
+						CustomAlert.error('退出失败', '退出登录时发生错误');
 					}
 				},
 			},

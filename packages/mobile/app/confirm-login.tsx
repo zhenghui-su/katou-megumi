@@ -6,7 +6,6 @@ import {
 	TouchableOpacity,
 	Image,
 	SafeAreaView,
-	Alert,
 	ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -83,12 +82,7 @@ export default function ConfirmLoginScreen() {
 				response.status === 200 ||
 				(response.status === 201 && response.data.success)
 			) {
-				Alert.alert('登录成功', '您已成功登录到网站', [
-					{
-						text: '确定',
-						onPress: () => router.push('/(tabs)/profile'),
-					},
-				]);
+				router.push('/(tabs)/profile');
 			} else {
 				setError(response.data?.message || '登录失败');
 			}

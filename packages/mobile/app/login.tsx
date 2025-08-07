@@ -5,7 +5,6 @@ import {
 	StyleSheet,
 	TextInput,
 	TouchableOpacity,
-	Alert,
 	ScrollView,
 	KeyboardAvoidingView,
 	Platform,
@@ -17,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { apiMethods } from '../utils/api';
+import CustomAlert from '@/components/CustomAlert';
 
 export default function LoginScreen() {
 	const colorScheme = useColorScheme();
@@ -30,7 +30,7 @@ export default function LoginScreen() {
 
 	const handleFormLogin = async () => {
 		if (!username.trim() || !password.trim()) {
-			Alert.alert('提示', '请输入用户名和密码');
+			CustomAlert.warning('提示', '请输入用户名和密码');
 			return;
 		}
 
@@ -58,21 +58,17 @@ export default function LoginScreen() {
 					})
 				);
 
-				Alert.alert('登录成功', '欢迎回来！', [
-					{
-						text: '确定',
-						onPress: () => {
-							router.back();
-						},
-					},
-				]);
+				router.back();
 			} else {
-				Alert.alert('登录失败', response.data?.message || '用户名或密码错误');
+				CustomAlert.error(
+					'登录失败',
+					response.data?.message || '用户名或密码错误'
+				);
 			}
 		} catch (error: any) {
 			const errorMessage =
 				error.response?.data?.message || '网络错误，请稍后重试';
-			Alert.alert('登录失败', errorMessage);
+			CustomAlert.error('登录失败', errorMessage);
 		} finally {
 			setLoading(false);
 		}

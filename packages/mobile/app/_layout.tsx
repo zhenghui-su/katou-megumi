@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { AlertModal } from '@/components/CustomAlert';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -27,6 +28,7 @@ export default function RootLayout() {
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
+      <AlertModal />
     </ThemeProvider>
   );
 }
