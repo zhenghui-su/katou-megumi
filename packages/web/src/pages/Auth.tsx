@@ -6,6 +6,7 @@ import { Close } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { AuthDialogProps } from '../types/auth';
 import { getPasswordStrength, validateRegisterForm } from '../utils/auth';
+import QrCodeLogin from '../components/QrCodeLogin';
 
 const AuthDialog: React.FC<AuthDialogProps> = ({ open, onClose }) => {
   const { login, register, loading, error } = useAuth();
@@ -178,47 +179,10 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onClose }) => {
             borderRight: '1px solid rgba(255, 255, 255, 0.2)',
           }}
         >
-          <h3
-            style={{
-              color: 'white',
-              marginBottom: '24px',
-              fontWeight: 600,
-              textAlign: 'center',
-              fontSize: '18px',
-            }}
-          >
-            扫描二维码登录
-          </h3>
-
-          <div
-            style={{
-              width: '180px',
-              height: '180px',
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '24px',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-            }}
-          >
-            <span style={{ color: '#999', fontSize: '14px' }}>二维码</span>
-          </div>
-
-          <p
-            style={{
-              color: 'rgba(255, 255, 255, 0.8)',
-              textAlign: 'center',
-              lineHeight: '1.5',
-              margin: 0,
-              fontSize: '14px',
-            }}
-          >
-            请使用手机APP
-            <br />
-            扫码快速登录
-          </p>
+          <QrCodeLogin onLoginSuccess={() => {
+            onClose();
+            resetForms();
+          }} />
         </div>
 
         {/* 右侧表单区域 */}

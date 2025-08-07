@@ -190,6 +190,7 @@ const Header: React.FC = () => {
                   sx={{ ml: 1 }}
                 >
                   <Avatar
+                    src={user?.avatar}
                     sx={{
                       width: 32,
                       height: 32,
