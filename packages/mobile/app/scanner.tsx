@@ -76,7 +76,6 @@ export default function ScannerScreen() {
 		if (scanned) return;
 
 		setScanned(true);
-		console.log('扫描结果:', { type, data });
 
 		// 处理二维码数据
 		if (data.includes('qr-login')) {
@@ -119,21 +118,14 @@ export default function ScannerScreen() {
 			const webDomain = url.hostname;
 
 			if (qrCodeId) {
-				console.log('扫描到二维码，qrCodeId:', qrCodeId);
-
 				// 先调用扫描接口，通知网页端二维码已被扫描
 				try {
 					const scanResponse = await apiMethods.scanQrCode(qrCodeId);
-					console.log(
-						'扫描接口响应:',
-						JSON.stringify(scanResponse.data, null, 2)
-					);
 
 					if (
 						scanResponse.status === 200 ||
 						(scanResponse.status === 201 && scanResponse.data.success)
 					) {
-						console.log('扫描成功，跳转到确认页面');
 						// 保存当前扫描的二维码ID
 						setCurrentQrCodeId(qrCodeId);
 						// 跳转到确认登录页面
@@ -147,7 +139,6 @@ export default function ScannerScreen() {
 							},
 						});
 					} else {
-						console.log('扫描失败:', scanResponse.data?.message);
 						setConfirmData({
 							qrCodeId: '',
 							webDomain: '',
@@ -254,7 +245,6 @@ export default function ScannerScreen() {
 		if (currentQrCodeId) {
 			try {
 				await apiMethods.cancelQrCodeScan(currentQrCodeId);
-				console.log('取消扫码成功');
 			} catch (error) {
 				console.error('取消扫码失败:', error);
 			}
@@ -280,7 +270,6 @@ export default function ScannerScreen() {
 		if (currentQrCodeId) {
 			try {
 				await apiMethods.cancelQrCodeScan(currentQrCodeId);
-				console.log('取消扫码成功');
 			} catch (error) {
 				console.error('取消扫码失败:', error);
 				// 即使取消接口失败，也允许用户返回

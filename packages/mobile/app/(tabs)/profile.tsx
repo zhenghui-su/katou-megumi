@@ -47,7 +47,6 @@ export default function ProfileScreen() {
 		try {
 			const token = await AsyncStorage.getItem('userToken');
 			const userData = await AsyncStorage.getItem('userInfo');
-			console.log(userInfo);
 			if (token && userData) {
 				setIsLoggedIn(true);
 				setUserInfo(JSON.parse(userData));

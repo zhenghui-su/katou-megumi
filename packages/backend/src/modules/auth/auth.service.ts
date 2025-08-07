@@ -13,7 +13,7 @@ import { QrCodeLoginDto, QrCodeConfirmDto } from './dto/qr-code.dto';
 @Injectable()
 export class AuthService {
 	// 存储二维码状态的内存缓存
-	private qrCodeCache = new Map<string, { status: 'pending' | 'scanned' | 'confirmed' | 'expired'; userId?: number; createdAt: number }>();
+	private qrCodeCache = new Map<string, { status: 'pending' | 'scanned' | 'confirmed' | 'expired' | 'cancelled'; userId?: number; createdAt: number }>();
 
 	constructor(
 		@InjectRepository(User)
@@ -297,7 +297,7 @@ export class AuthService {
 		return { success: true, message: '确认成功', user_data, token };
 	}
 
-	// 取消扫码（将状态从scanned重置为pending）
+	// 取消扫码（将状态设置为cancelled）
 	async cancelQrCodeScan(qrCodeId: string): Promise<{ success: boolean; message: string }> {
 		// 检查二维码是否存在且未过期
 		const qrCode = this.qrCodeCache.get(qrCodeId);
@@ -314,10 +314,10 @@ export class AuthService {
 			return { success: false, message: '二维码状态异常' };
 		}
 
-		// 重置二维码状态为pending
+		// 设置二维码状态为cancelled
 		this.qrCodeCache.set(qrCodeId, {
 			...qrCode,
-			status: 'pending',
+			status: 'cancelled',
 			userId: undefined
 		});
 

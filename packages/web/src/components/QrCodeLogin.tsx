@@ -12,15 +12,14 @@ const QrCodeLogin: React.FC<QrCodeLoginProps> = ({ onLoginSuccess }) => {
   const { setAuthData } = useAuth();
   const [_, setQrCodeId] = useState<string>('');
   const [status, setStatus] = useState<
-    'loading' | 'pending' | 'scanned' | 'expired' | 'confirmed'
-  >('loading');
+    'pending' | 'scanned' | 'expired' | 'confirmed' | 'cancelled'
+  >('pending');
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // 生成二维码
   const generateQrCode = async () => {
     try {
-      setStatus('loading');
       const response = await authAPI.generateQrCode();
       const { qrCodeId: newQrCodeId } = response.data.data;
 
@@ -33,7 +32,6 @@ const QrCodeLogin: React.FC<QrCodeLoginProps> = ({ onLoginSuccess }) => {
       // 等待下一个渲染周期，确保canvas元素已经渲染
       setTimeout(async () => {
         if (canvasRef.current) {
-          console.log('Canvas元素存在，开始生成二维码图片...');
           try {
             await QRCode.toCanvas(canvasRef.current, qrContent, {
               width: 180,
@@ -43,7 +41,6 @@ const QrCodeLogin: React.FC<QrCodeLoginProps> = ({ onLoginSuccess }) => {
                 light: '#FFFFFF',
               },
             });
-            console.log('二维码图片生成成功');
           } catch (error) {
             console.error('生成二维码图片失败:', error);
           }
@@ -75,37 +72,30 @@ const QrCodeLogin: React.FC<QrCodeLoginProps> = ({ onLoginSuccess }) => {
       clearInterval(intervalRef.current);
     }
 
-    console.log('开始轮询二维码状态，qrCodeId:', qrCodeId);
     intervalRef.current = setInterval(async () => {
       try {
-        console.log('检查二维码状态...');
         const response = await authAPI.checkQrCodeStatus(qrCodeId);
-        console.log('二维码状态检查响应:', JSON.stringify(response.data, null, 2));
-        const { status: qrStatus, token, user_data } = response.data.data;
-        console.log('二维码状态:', qrStatus, '是否有token:', !!token, '是否有用户数据:', !!user_data);
 
+        const { status: qrStatus, token, user_data } = response.data.data;
         if (qrStatus === 'confirmed' && token && user_data) {
           // 登录成功
-          console.log('二维码登录成功，保存token和用户数据:', token, user_data);
           setAuthData(user_data, token);
           message.success('扫码登录成功！');
-          setStatus('confirmed');
+          setStatus(qrStatus);
           stopPolling();
           onLoginSuccess();
         } else if (qrStatus === 'expired') {
-          console.log('二维码已过期');
-          setStatus('expired');
+          setStatus(qrStatus);
           stopPolling();
         } else if (qrStatus === 'scanned') {
-          console.log('二维码已被扫描，等待确认');
-          setStatus('scanned');
+          setStatus(qrStatus);
         } else if (qrStatus === 'pending') {
-          console.log('二维码状态为pending，重新生成二维码');
           setStatus('pending');
+        } else if (qrStatus === 'cancelled') {
+          console.log('检测到用户取消扫码');
+
+          setStatus('cancelled');
           stopPolling();
-          generateQrCode();
-        } else {
-          console.log('二维码状态为:', qrStatus);
         }
       } catch (error) {
         console.error('检查二维码状态失败:', error);
@@ -134,22 +124,6 @@ const QrCodeLogin: React.FC<QrCodeLoginProps> = ({ onLoginSuccess }) => {
   // 渲染状态内容
   const renderContent = () => {
     switch (status) {
-      case 'loading':
-        return (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '180px',
-              color: '#999',
-              fontSize: '14px',
-            }}
-          >
-            生成中...
-          </div>
-        );
-
       case 'pending':
         return (
           <canvas
@@ -177,7 +151,9 @@ const QrCodeLogin: React.FC<QrCodeLoginProps> = ({ onLoginSuccess }) => {
             }}
           >
             <div style={{ marginBottom: '8px' }}>已扫描</div>
-            <div style={{ fontSize: '12px', color: '#999' }}>请在手机上确认登录</div>
+            <div style={{ fontSize: '12px', color: '#999' }}>
+              请在手机上确认登录
+            </div>
           </div>
         );
 
@@ -198,6 +174,27 @@ const QrCodeLogin: React.FC<QrCodeLoginProps> = ({ onLoginSuccess }) => {
             onClick={generateQrCode}
           >
             <div style={{ marginBottom: '8px' }}>二维码已过期</div>
+            <div style={{ color: '#ff6b9d' }}>点击刷新</div>
+          </div>
+        );
+
+      case 'cancelled':
+        return (
+          <div
+            style={{
+              width: '180px',
+              height: '180px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#999',
+              fontSize: '14px',
+              cursor: 'pointer',
+            }}
+            onClick={generateQrCode}
+          >
+            <div style={{ marginBottom: '8px' }}>扫码已取消</div>
             <div style={{ color: '#ff6b9d' }}>点击刷新</div>
           </div>
         );
