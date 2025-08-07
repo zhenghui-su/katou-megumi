@@ -25,6 +25,7 @@ import { WorksModule } from './modules/works/works.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { UsersModule } from './modules/users/users.module';
 import { MusicModule } from './modules/music/music.module';
+import { CleanupModule } from './modules/cleanup/cleanup.module';
 import * as path from 'path';
 
 @Module({
@@ -83,6 +84,7 @@ import * as path from 'path';
 		NotificationModule,
 		UsersModule,
 		MusicModule,
+		CleanupModule,
 	],
 })
 export class AppModule {}

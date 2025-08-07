@@ -241,3 +241,20 @@ export const musicAPI = {
       },
     }),
 };
+
+export const cleanupAPI = {
+  // 获取清理统计信息
+  getStats: () => api.get('/cleanup/stats'),
+
+  // 手动触发清理
+  manualCleanup: () => api.post('/cleanup/manual'),
+
+  // 获取清理配置
+  getConfig: () => api.get('/cleanup/config'),
+
+  // 更新清理配置
+  updateConfig: (data: {
+    retentionDays?: number;
+    maxRetainedImages?: number;
+  }) => api.put('/cleanup/config', data),
+};

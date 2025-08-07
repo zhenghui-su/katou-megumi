@@ -26,6 +26,7 @@ import {
   AuditOutlined,
   SoundOutlined,
   TeamOutlined,
+  DeleteOutlined,
 } from '@ant-design/icons';
 import {
   Routes,
@@ -36,9 +37,10 @@ import {
 } from 'react-router-dom';
 import Dashboard from '../pages/Dashboard';
 import Review from '../pages/Review';
-import MusicManagement from '../pages/MusicManagement';
 import ImageManagement from '../pages/ImageManagement';
 import VideoManagement from '../pages/VideoManagement';
+import MusicManagement from '../pages/MusicManagement';
+import CleanupManagement from '../pages/CleanupManagement';
 import UserManagement from '../pages/UserManagement';
 import Profile from '../pages/Profile';
 import { notificationAPI } from '../utils/api';
@@ -67,7 +69,7 @@ const menuItems: MenuItem[] = [
     key: 'users',
     icon: <TeamOutlined />,
     label: '用户管理',
-    path: '/admin/users',
+    path: '/users',
   },
   {
     key: 'review',
@@ -84,19 +86,32 @@ const menuItems: MenuItem[] = [
         key: 'images',
         icon: <PictureOutlined />,
         label: '图片管理',
-        path: '/admin/images',
+        path: '/images',
       },
       {
         key: 'videos',
         icon: <VideoCameraOutlined />,
         label: '视频管理',
-        path: '/admin/videos',
+        path: '/videos',
       },
       {
         key: 'music',
         icon: <SoundOutlined />,
         label: '音乐管理',
-        path: '/admin/music',
+        path: '/music',
+      },
+    ],
+  },
+  {
+    key: 'system',
+    icon: <SettingOutlined />,
+    label: '系统管理',
+    children: [
+      {
+        key: 'cleanup',
+        icon: <DeleteOutlined />,
+        label: '数据清理',
+        path: '/cleanup',
       },
     ],
   },
@@ -168,7 +183,7 @@ const MainLayout: React.FC = () => {
       }
       if (item.children) {
         const found = findSelectedKey(item.children, pathname);
-        if (found) return found;
+        if (found && found !== 'dashboard') return found;
       }
     }
     return 'dashboard';
@@ -222,7 +237,7 @@ const MainLayout: React.FC = () => {
   const handleUserMenuClick = ({ key }: { key: string }) => {
     switch (key) {
       case 'profile':
-        navigate('/admin/profile');
+        navigate('/profile');
         break;
       case 'settings':
         message.info('系统设置功能开发中...');
@@ -290,6 +305,13 @@ const MainLayout: React.FC = () => {
           style={{
             background: '#001529',
             boxShadow: '2px 0 8px rgba(0,0,0,0.15)',
+            // position: 'fixed',
+            // left: 0,
+            // top: 0,
+            // bottom: 0,
+            // zIndex: 1000,
+            // height: '100vh',
+            // overflow: 'auto',
           }}
         >
           {/* Logo区域 */}
@@ -341,31 +363,23 @@ const MainLayout: React.FC = () => {
                     icon: child.icon,
                     label: child.label,
                   })),
-                  style: {
-                    margin: '4px 0',
-                    borderRadius: 8,
-                    height: 48,
-                    lineHeight: '48px',
-                  },
                 };
               } else {
                 return {
                   key: item.key,
                   icon: item.icon,
                   label: item.label,
-                  style: {
-                    margin: '4px 0',
-                    borderRadius: 8,
-                    height: 48,
-                    lineHeight: '48px',
-                  },
                 };
               }
             })}
           />
         </Sider>
 
-        <Layout>
+        <Layout
+          style={{
+            transition: 'margin-left 0.2s',
+          }}
+        >
           {/* 顶部导航栏 */}
           <Header
             style={{
@@ -375,7 +389,9 @@ const MainLayout: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              position: 'relative',
+              position: 'sticky',
+              top: 0,
+              zIndex: 999,
             }}
           >
             <Space>
@@ -474,12 +490,13 @@ const MainLayout: React.FC = () => {
           >
             <Routes>
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/admin/users" element={<UserManagement />} />
-              <Route path="/admin/profile" element={<Profile />} />
+              <Route path="/users" element={<UserManagement />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="/review" element={<Review />} />
-              <Route path="/admin/images" element={<ImageManagement />} />
-              <Route path="/admin/videos" element={<VideoManagement />} />
-              <Route path="/admin/music" element={<MusicManagement />} />
+              <Route path="/images" element={<ImageManagement />} />
+              <Route path="/videos" element={<VideoManagement />} />
+              <Route path="/music" element={<MusicManagement />} />
+              <Route path="/cleanup" element={<CleanupManagement />} />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </Content>
